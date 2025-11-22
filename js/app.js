@@ -1,113 +1,85 @@
 /**
- * PetCare v2 - Gamified Pet Wellness
- * With Gemini AI Integration
+ * PetCare v3 - Compact & Clean
  */
 
-// Config
-const STORAGE_KEY = 'petcare_v2';
-const DEFAULT_PHOTO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzFhMWEyZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjgwIj7wn5CVPC90ZXh0Pjwvc3ZnPg==';
+const STORAGE_KEY = 'petcare_v3';
+const DEFAULT_PHOTO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCBmaWxsPSIjMWExYTJlIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI0MCI+8J+QlTwvdGV4dD48L3N2Zz4=';
 
-// Daily routine
 const TASKS = [
-    { id: 'xixi1', time: '08:30', name: '1º xixi do dia', emoji: '🚽', points: 10 },
-    { id: 'cafe', time: '10:00', name: 'Café da manhã', emoji: '🍳', points: 15 },
-    { id: 'almoco', time: '12:00', name: 'Almoço', emoji: '🍖', points: 15 },
-    { id: 'xixi2', time: '13:30', name: '2º xixi', emoji: '🚽', points: 10 },
-    { id: 'xixi3', time: '19:00', name: '3º xixi', emoji: '🚽', points: 10 },
-    { id: 'jantar', time: '22:00', name: 'Jantar', emoji: '🥘', points: 15 },
-    { id: 'xixi4', time: '00:00', name: 'Último xixi', emoji: '🚽', points: 10 }
+    { id: 'xixi1', time: '08:30', name: '1º xixi', emoji: '🚽', pts: 10 },
+    { id: 'cafe', time: '10:00', name: 'Café', emoji: '🍳', pts: 15 },
+    { id: 'almoco', time: '12:00', name: 'Almoço', emoji: '🍖', pts: 15 },
+    { id: 'xixi2', time: '13:30', name: '2º xixi', emoji: '🚽', pts: 10 },
+    { id: 'xixi3', time: '19:00', name: '3º xixi', emoji: '🚽', pts: 10 },
+    { id: 'jantar', time: '22:00', name: 'Jantar', emoji: '🥘', pts: 15 },
+    { id: 'xixi4', time: '00:00', name: 'Último xixi', emoji: '🚽', pts: 10 }
 ];
 
-// Happiness levels
-const HAPPINESS = [
-    { min: 80, emoji: '🤩', color: '#10b981' },
-    { min: 60, emoji: '😄', color: '#34d399' },
-    { min: 40, emoji: '😊', color: '#fbbf24' },
-    { min: 20, emoji: '😐', color: '#fb923c' },
-    { min: 0, emoji: '😢', color: '#ef4444' }
+const HAPPINESS_LEVELS = [
+    { min: 80, emoji: '🤩' },
+    { min: 60, emoji: '😄' },
+    { min: 40, emoji: '😊' },
+    { min: 20, emoji: '😐' },
+    { min: 0, emoji: '😢' }
 ];
 
-// Action labels
-const ACTION_NAMES = {
-    carinho: 'Carinho',
-    comida: 'Comida',
-    passeio: 'Passeio',
-    agua: 'Água',
-    brincar: 'Brincadeira',
-    banho: 'Banho'
+const ACTIONS = {
+    carinho: 'Carinho', comida: 'Comida', passeio: 'Passeio',
+    agua: 'Água', brincar: 'Brincar', banho: 'Banho'
 };
 
-// State
 let state = {
     pet: null,
     happiness: 50,
-    completedTasks: [],
-    activities: [],
+    done: [],
+    history: [],
     streak: 0,
-    totalPoints: 0,
+    points: 0,
     lastDate: null
 };
 
 // Utils
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
 const today = () => new Date().toISOString().split('T')[0];
 const now = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-const timeToMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-const currentMins = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const toMins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const currMins = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 
 // Storage
 function save() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-        console.error('Save error:', e);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function load() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        if (data) {
-            state = { ...state, ...JSON.parse(data) };
-            if (state.lastDate !== today()) {
-                handleNewDay();
-            }
-        }
-    } catch (e) {
-        console.error('Load error:', e);
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) {
+        state = { ...state, ...JSON.parse(d) };
+        if (state.lastDate !== today()) newDay();
     }
 }
 
-function handleNewDay() {
-    const allDone = state.completedTasks.length === TASKS.length;
-    if (allDone && state.lastDate) {
-        state.streak++;
-    } else if (state.lastDate && !allDone) {
-        state.streak = 0;
-    }
-    state.completedTasks = [];
-    state.activities = [];
+function newDay() {
+    if (state.done.length === TASKS.length && state.lastDate) state.streak++;
+    else if (state.lastDate) state.streak = 0;
+    state.done = [];
+    state.history = [];
     state.lastDate = today();
     save();
 }
 
 function reset() {
-    if (confirm('Apagar todos os dados?')) {
+    if (confirm('Apagar tudo?')) {
         localStorage.removeItem(STORAGE_KEY);
-        state = { pet: null, happiness: 50, completedTasks: [], activities: [], streak: 0, totalPoints: 0, lastDate: null };
-        showScreen('setup');
+        location.reload();
     }
 }
 
 // Screens
-function showScreen(name) {
+function show(name) {
     $$('.screen').forEach(s => s.classList.remove('active'));
     $(`#${name}-screen`).classList.add('active');
-    if (name === 'dashboard') {
-        updateDashboard();
-        loadAIContent();
-    }
+    if (name === 'dashboard') update();
 }
 
 // Setup
@@ -117,293 +89,220 @@ function initSetup() {
     const img = $('#preview-image');
 
     preview.onclick = () => input.click();
-    input.onchange = (e) => {
+
+    input.onchange = e => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = ev => {
                 img.src = ev.target.result;
                 img.style.display = 'block';
-                $('.photo-placeholder').style.display = 'none';
+                $('.photo-icon').style.display = 'none';
+                $('.photo-text').style.display = 'none';
             };
             reader.readAsDataURL(file);
         }
     };
 
-    $('#pet-form').onsubmit = (e) => {
+    $('#pet-form').onsubmit = e => {
         e.preventDefault();
         state.pet = {
             name: $('#pet-name').value.trim(),
             breed: $('#pet-breed').value.trim(),
-            age: $('#pet-age').value.trim(),
-            personality: $('#pet-personality').value.trim(),
             photo: img.src || DEFAULT_PHOTO
         };
         state.lastDate = today();
         state.happiness = 50;
         save();
-        showScreen('dashboard');
+        show('dashboard');
     };
 }
 
 // Dashboard
-function updateDashboard() {
+function update() {
     if (!state.pet) return;
 
-    // Header
     $('#pet-avatar').src = state.pet.photo || DEFAULT_PHOTO;
     $('#pet-name-display').textContent = state.pet.name;
-    $('#pet-details').textContent = `${state.pet.breed} • ${state.pet.age}`;
+    $('#pet-breed-display').textContent = state.pet.breed;
 
-    // Stats
-    $('#tasks-done').textContent = `${state.completedTasks.length}/${TASKS.length}`;
-    $('#streak-count').textContent = state.streak;
-    $('#total-points').textContent = state.totalPoints;
-
-    // Happiness
-    updateHappiness();
-
-    // Tasks
-    renderTasks();
-
-    // Timeline
-    renderTimeline();
-}
-
-function updateHappiness() {
-    const h = Math.max(0, Math.min(100, state.happiness));
-    const level = HAPPINESS.find(l => h >= l.min);
-
+    const level = HAPPINESS_LEVELS.find(l => state.happiness >= l.min);
     $('#happiness-emoji').textContent = level?.emoji || '😊';
-    $('#happiness-level').textContent = `${Math.round(h)}%`;
-    $('#happiness-level').style.color = level?.color || '#fbbf24';
-    $('#happiness-fill').style.width = `${h}%`;
+    $('#happiness-num').textContent = Math.round(state.happiness);
+    $('#tasks-num').textContent = `${state.done.length}/${TASKS.length}`;
+    $('#streak-num').textContent = state.streak;
+    $('#points-num').textContent = state.points;
+
+    renderTasks();
+    renderTimeline();
+    loadAI();
 }
 
 function renderTasks() {
-    const container = $('#task-list');
-    const curr = currentMins();
-
-    container.innerHTML = TASKS.map(task => {
-        const done = state.completedTasks.includes(task.id);
-        const taskMins = timeToMins(task.time);
-        const late = !done && (task.time === '00:00' ? curr < 60 : curr > taskMins + 30);
-        const cls = done ? 'completed' : late ? 'late' : '';
-
+    const c = currMins();
+    $('#task-list').innerHTML = TASKS.map(t => {
+        const done = state.done.includes(t.id);
+        const late = !done && (t.time === '00:00' ? c < 60 : c > toMins(t.time) + 30);
         return `
-            <div class="task-item ${cls}" data-id="${task.id}">
+            <div class="task ${done ? 'done' : ''} ${late ? 'late' : ''}" data-id="${t.id}">
                 <div class="task-check">${done ? '✓' : ''}</div>
-                <div class="task-content">
-                    <div class="task-name">${task.emoji} ${task.name}</div>
-                    <div class="task-time">${task.time}</div>
+                <div class="task-info">
+                    <div class="task-name">${t.emoji} ${t.name}</div>
+                    <div class="task-time">${t.time}</div>
                 </div>
-                <div class="task-points">+${task.points}</div>
+                <div class="task-pts">+${t.pts}</div>
             </div>
         `;
     }).join('');
 
-    // Progress
-    const progress = Math.round((state.completedTasks.length / TASKS.length) * 100);
-    $('#progress-text').textContent = `${progress}%`;
-
-    // Click handlers
-    container.querySelectorAll('.task-item:not(.completed)').forEach(el => {
-        el.onclick = () => completeTask(el.dataset.id);
+    $$('.task:not(.done)').forEach(el => {
+        el.onclick = () => doTask(el.dataset.id);
     });
 }
 
 function renderTimeline() {
-    const container = $('#timeline-list');
-
-    if (!state.activities.length) {
-        container.innerHTML = '<p class="empty-timeline">Nenhuma atividade ainda</p>';
+    const c = $('#timeline');
+    if (!state.history.length) {
+        c.innerHTML = '<p class="empty">Nenhuma atividade</p>';
         return;
     }
-
-    container.innerHTML = [...state.activities].reverse().slice(0, 10).map(a => `
+    c.innerHTML = [...state.history].reverse().slice(0, 8).map(h => `
         <div class="timeline-item">
-            <span class="timeline-time">${a.time}</span>
-            <span class="timeline-emoji">${a.emoji}</span>
-            <span class="timeline-text">${a.name}</span>
-            <span class="timeline-points">+${a.points}</span>
+            <span class="time">${h.time}</span>
+            <span class="emoji">${h.emoji}</span>
+            <span class="text">${h.name}</span>
+            <span class="pts">+${h.pts}</span>
         </div>
     `).join('');
 }
 
 // Actions
-async function completeTask(id) {
-    if (state.completedTasks.includes(id)) return;
+function doTask(id) {
+    if (state.done.includes(id)) return;
+    const t = TASKS.find(x => x.id === id);
+    if (!t) return;
 
-    const task = TASKS.find(t => t.id === id);
-    if (!task) return;
-
-    state.completedTasks.push(id);
-    addPoints(task.points, task.emoji);
-    addHappiness(Math.round(task.points * 0.5));
-    addActivity(task.name, task.emoji, task.points);
-
+    state.done.push(id);
+    addPts(t.pts, t.emoji);
+    state.happiness = Math.min(100, state.happiness + t.pts * 0.5);
+    state.history.push({ name: t.name, emoji: t.emoji, pts: t.pts, time: now() });
     save();
-    updateDashboard();
+    update();
 
-    // Show AI reaction if configured
-    if (AI && AI.isConfigured()) {
-        showPetReaction(task.name, task.emoji);
-    }
-
-    if (state.completedTasks.length === TASKS.length) {
-        celebrate();
-    }
+    if (window.AI?.isConfigured()) showReaction(t.name, t.emoji);
+    if (state.done.length === TASKS.length) celebrate();
 }
 
-async function handleQuickAction(action, points, emoji) {
-    addPoints(points, emoji);
-    addHappiness(Math.round(points * 0.5));
-    addActivity(ACTION_NAMES[action] || action, emoji, points);
+function doAction(action, pts, emoji) {
+    addPts(pts, emoji);
+    state.happiness = Math.min(100, state.happiness + pts * 0.5);
+    state.history.push({ name: ACTIONS[action], emoji, pts, time: now() });
     save();
-    updateDashboard();
+    update();
 
-    // Show AI reaction if configured
-    if (AI && AI.isConfigured()) {
-        showPetReaction(ACTION_NAMES[action] || action, emoji);
-    }
+    if (window.AI?.isConfigured()) showReaction(ACTIONS[action], emoji);
 }
 
-function addPoints(pts, emoji) {
-    state.totalPoints += pts;
-    showPointsPopup(pts, emoji);
-}
-
-function addHappiness(amount) {
-    state.happiness = Math.min(100, state.happiness + amount);
-}
-
-function addActivity(name, emoji, points) {
-    state.activities.push({ name, emoji, points, time: now() });
-}
-
-function showPointsPopup(pts, emoji) {
-    const popup = document.createElement('div');
-    popup.className = 'points-popup';
-    popup.textContent = `+${pts} ${emoji}`;
-    document.body.appendChild(popup);
-    setTimeout(() => popup.remove(), 800);
+function addPts(pts, emoji) {
+    state.points += pts;
+    const p = document.createElement('div');
+    p.className = 'points-popup';
+    p.textContent = `+${pts} ${emoji}`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
 }
 
 function celebrate() {
-    $('#celebration-msg').textContent = `${state.pet.name} está muito feliz! Todas as tasks concluídas!`;
+    $('#celebration-msg').textContent = `${state.pet.name} completou tudo!`;
     $('#celebration-modal').style.display = 'flex';
 }
 
-// AI Integration
-async function loadAIContent() {
-    if (!AI || !AI.isConfigured() || !state.pet) {
-        $('#ai-card').style.display = 'none';
+// AI
+async function loadAI() {
+    if (!window.AI?.isConfigured() || !state.pet) {
+        $('#ai-tip').style.display = 'none';
         return;
     }
 
-    const aiCard = $('#ai-card');
-    const aiMessage = $('#ai-message');
-    const aiTitle = $('#ai-title');
-
-    aiCard.style.display = 'block';
-    aiMessage.textContent = 'Carregando...';
-    aiMessage.classList.add('loading');
-    aiTitle.textContent = 'Dica do Dia';
+    $('#ai-tip').style.display = 'flex';
+    $('#ai-message').textContent = 'Carregando dica...';
 
     try {
-        const tip = await AI.getDailyTip(
-            state.pet.name,
-            state.pet.breed,
-            state.pet.age,
-            state.pet.personality
-        );
-
-        if (tip) {
-            aiMessage.textContent = tip;
-        } else {
-            aiMessage.textContent = 'Cuide bem do seu pet hoje! 🐕';
-        }
-    } catch (e) {
-        aiMessage.textContent = 'Cuide bem do seu pet hoje! 🐕';
-    }
-
-    aiMessage.classList.remove('loading');
-}
-
-async function showPetReaction(taskName, emoji) {
-    if (!AI || !AI.isConfigured() || !state.pet) return;
-
-    const modal = $('#reaction-modal');
-    const reactionText = $('#reaction-text');
-    const reactionEmoji = $('#reaction-emoji');
-
-    reactionEmoji.textContent = emoji;
-    reactionText.textContent = 'Pensando...';
-    modal.style.display = 'flex';
-
-    try {
-        const reaction = await AI.getPetReaction(
-            state.pet.name,
-            state.pet.breed,
-            state.pet.age,
-            taskName,
-            state.happiness
-        );
-
-        if (reaction) {
-            reactionText.textContent = reaction;
-        } else {
-            reactionText.textContent = `${state.pet.name} está feliz com isso! 🐕`;
-        }
-    } catch (e) {
-        reactionText.textContent = `${state.pet.name} está feliz com isso! 🐕`;
+        const tip = await AI.getDailyTip(state.pet.name, state.pet.breed, '', '');
+        $('#ai-message').textContent = tip || 'Cuide bem do seu pet hoje! 🐕';
+    } catch {
+        $('#ai-message').textContent = 'Cuide bem do seu pet hoje! 🐕';
     }
 }
 
-// Happiness decay
-function startDecay() {
-    setInterval(() => {
-        if (state.pet && state.happiness > 0) {
-            state.happiness = Math.max(0, state.happiness - 1);
-            save();
-            updateHappiness();
-        }
-    }, 60000);
+async function showReaction(taskName, emoji) {
+    if (!window.AI?.isConfigured()) return;
+
+    $('#reaction-emoji').textContent = emoji;
+    $('#reaction-text').textContent = 'Pensando...';
+    $('#reaction-modal').style.display = 'flex';
+
+    try {
+        const r = await AI.getPetReaction(state.pet.name, state.pet.breed, '', taskName, state.happiness);
+        $('#reaction-text').textContent = r || `${state.pet.name} adorou! 🐕`;
+    } catch {
+        $('#reaction-text').textContent = `${state.pet.name} adorou! 🐕`;
+    }
 }
 
-// Event listeners
+// Decay
+setInterval(() => {
+    if (state.pet && state.happiness > 0) {
+        state.happiness = Math.max(0, state.happiness - 1);
+        save();
+        if ($('#dashboard-screen').classList.contains('active')) update();
+    }
+}, 60000);
+
+// Events
 function initEvents() {
+    // Tabs
+    $$('.tab').forEach(tab => {
+        tab.onclick = () => {
+            $$('.tab').forEach(t => t.classList.remove('active'));
+            $$('.tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            $(`#tab-${tab.dataset.tab}`).classList.add('active');
+        };
+    });
+
     // Quick actions
     $$('.action-btn').forEach(btn => {
         btn.onclick = () => {
             btn.style.transform = 'scale(0.95)';
             setTimeout(() => btn.style.transform = '', 150);
-            handleQuickAction(btn.dataset.action, +btn.dataset.points, btn.dataset.emoji);
+            doAction(btn.dataset.action, +btn.dataset.points, btn.dataset.emoji);
         };
     });
 
     // Settings
     $('#settings-btn').onclick = () => {
-        // Load current API key if exists
-        if (AI && AI.isConfigured()) {
-            $('#api-key').value = '••••••••••••••••';
-        }
+        const key = localStorage.getItem('petcare_gemini_key');
+        $('#api-key').value = key || '';
         $('#settings-modal').style.display = 'flex';
     };
+
     $('#close-settings').onclick = () => $('#settings-modal').style.display = 'none';
 
-    // Save API Key
+    // SAVE API - Fixed!
     $('#save-api-btn').onclick = () => {
         const key = $('#api-key').value.trim();
-        if (key && key !== '••••••••••••••••') {
-            AI.init(key);
-            alert('API Key salva! A IA está ativada.');
-            $('#settings-modal').style.display = 'none';
-            loadAIContent();
-        } else if (!key) {
-            AI.clear();
-            alert('API Key removida.');
-            $('#ai-card').style.display = 'none';
+        if (key) {
+            if (window.AI) {
+                AI.init(key);
+                alert('API salva! IA ativada.');
+                $('#settings-modal').style.display = 'none';
+                loadAI();
+            }
+        } else {
+            if (window.AI) AI.clear();
+            $('#ai-tip').style.display = 'none';
+            alert('API removida.');
         }
     };
 
@@ -413,15 +312,14 @@ function initEvents() {
         if (state.pet) {
             $('#pet-name').value = state.pet.name;
             $('#pet-breed').value = state.pet.breed;
-            $('#pet-age').value = state.pet.age;
-            $('#pet-personality').value = state.pet.personality || '';
-            if (state.pet.photo && state.pet.photo !== DEFAULT_PHOTO) {
+            if (state.pet.photo !== DEFAULT_PHOTO) {
                 $('#preview-image').src = state.pet.photo;
                 $('#preview-image').style.display = 'block';
-                $('.photo-placeholder').style.display = 'none';
+                $('.photo-icon').style.display = 'none';
+                $('.photo-text').style.display = 'none';
             }
         }
-        showScreen('setup');
+        show('setup');
     };
 
     // Reset
@@ -430,44 +328,20 @@ function initEvents() {
         reset();
     };
 
-    // Celebration
+    // Modals
+    $('#close-reaction').onclick = () => $('#reaction-modal').style.display = 'none';
     $('#close-celebration').onclick = () => $('#celebration-modal').style.display = 'none';
 
-    // Reaction modal
-    $('#close-reaction').onclick = () => $('#reaction-modal').style.display = 'none';
-
-    // Close modals on backdrop
     $$('.modal').forEach(m => {
-        m.onclick = (e) => { if (e.target === m) m.style.display = 'none'; };
+        m.onclick = e => { if (e.target === m) m.style.display = 'none'; };
     });
 }
 
 // Init
-function init() {
-    load();
-    initSetup();
-    initEvents();
+load();
+initSetup();
+initEvents();
+if (window.AI) AI.load();
+state.pet ? show('dashboard') : show('setup');
 
-    // Load AI module
-    if (window.AI) {
-        AI.load();
-    }
-
-    if (state.pet) {
-        showScreen('dashboard');
-    } else {
-        showScreen('setup');
-    }
-
-    startDecay();
-    setInterval(() => state.pet && renderTasks(), 60000);
-
-    console.log('PetCare v2 + AI initialized 🐕✨');
-}
-
-document.addEventListener('DOMContentLoaded', init);
-
-// PWA
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
+console.log('PetCare v3 🐕');

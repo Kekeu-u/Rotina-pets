@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="PetCare - Seu companheiro gamificado para cuidados com pets">
+    <meta name="description" content="PetCare - Cuidado gamificado para seu pet">
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,185 +16,146 @@
 </head>
 <body>
     <div id="app">
-        <!-- Setup Screen -->
+        <!-- Setup Screen (Simplificado) -->
         <div id="setup-screen" class="screen active">
-            <div class="setup-header">
-                <h1>PetCare</h1>
-                <p class="subtitle">Cuidado gamificado para seu pet</p>
-            </div>
+            <div class="setup-container">
+                <h1 class="logo">PetCare</h1>
 
-            <form id="pet-form" class="setup-form">
-                <div class="photo-upload">
-                    <div class="photo-preview" id="photo-preview">
-                        <span class="photo-placeholder">🐕</span>
+                <form id="pet-form">
+                    <div class="photo-upload" id="photo-preview">
+                        <span class="photo-icon">🐕</span>
                         <img id="preview-image" src="" alt="" style="display: none;">
+                        <span class="photo-text">Adicionar foto</span>
                     </div>
                     <input type="file" id="pet-photo" accept="image/*" hidden>
-                    <label for="pet-photo" class="photo-label">Toque para adicionar foto</label>
-                </div>
 
-                <div class="form-group">
-                    <label for="pet-name">Nome</label>
-                    <input type="text" id="pet-name" placeholder="Ex: Thor" required>
-                </div>
+                    <input type="text" id="pet-name" class="input-large" placeholder="Nome do pet" required>
+                    <input type="text" id="pet-breed" class="input-small" placeholder="Raça" required>
 
-                <div class="form-group">
-                    <label for="pet-breed">Raça</label>
-                    <input type="text" id="pet-breed" placeholder="Ex: Golden Retriever" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="pet-age">Idade</label>
-                    <input type="text" id="pet-age" placeholder="Ex: 2 anos" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="pet-personality">Sobre (opcional)</label>
-                    <textarea id="pet-personality" placeholder="Conte um pouco sobre seu pet..."></textarea>
-                </div>
-
-                <button type="submit" class="btn-primary">Começar</button>
-            </form>
+                    <button type="submit" class="btn-start">Começar</button>
+                </form>
+            </div>
         </div>
 
-        <!-- Dashboard Screen -->
+        <!-- Dashboard Screen (Compacto) -->
         <div id="dashboard-screen" class="screen">
-            <!-- Pet Header -->
-            <header class="pet-header">
-                <img id="pet-avatar" class="pet-avatar" src="" alt="">
-                <div class="pet-info">
-                    <h1 id="pet-name-display">Pet</h1>
-                    <p id="pet-details">Raça • Idade</p>
+            <!-- Header compacto -->
+            <header class="header">
+                <div class="header-left">
+                    <img id="pet-avatar" class="avatar" src="" alt="">
+                    <div>
+                        <h1 id="pet-name-display">Pet</h1>
+                        <p id="pet-breed-display">Raça</p>
+                    </div>
                 </div>
+                <button class="btn-icon" id="settings-btn">⚙️</button>
             </header>
 
-            <!-- Stats -->
-            <div class="stats-row">
-                <div class="stat-item">
-                    <div class="stat-value" id="tasks-done">0/7</div>
-                    <div class="stat-label">Tasks</div>
+            <!-- Stats compactos -->
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-emoji" id="happiness-emoji">😊</span>
+                    <span class="stat-num" id="happiness-num">50</span>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="streak-count">0</div>
-                    <div class="stat-label">Streak</div>
+                <div class="stat">
+                    <span class="stat-num" id="tasks-num">0/7</span>
+                    <span class="stat-label">tasks</span>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="total-points">0</div>
-                    <div class="stat-label">Pontos</div>
+                <div class="stat">
+                    <span class="stat-num" id="streak-num">0</span>
+                    <span class="stat-label">dias</span>
                 </div>
-            </div>
-
-            <!-- Happiness -->
-            <div class="happiness-card">
-                <div class="happiness-header">
-                    <h2><span id="happiness-emoji">😊</span> Felicidade</h2>
-                    <span class="happiness-level" id="happiness-level">50%</span>
-                </div>
-                <div class="happiness-bar">
-                    <div class="happiness-fill" id="happiness-fill" style="width: 50%"></div>
+                <div class="stat">
+                    <span class="stat-num" id="points-num">0</span>
+                    <span class="stat-label">pts</span>
                 </div>
             </div>
 
-            <!-- AI Card -->
-            <div class="ai-card" id="ai-card" style="display: none;">
-                <div class="ai-header">
-                    <span class="ai-icon">✨</span>
-                    <span class="ai-title" id="ai-title">Dica do Dia</span>
-                </div>
-                <p class="ai-message" id="ai-message">Carregando...</p>
-            </div>
+            <!-- Tabs -->
+            <nav class="tabs">
+                <button class="tab active" data-tab="rotina">Rotina</button>
+                <button class="tab" data-tab="acoes">Ações</button>
+                <button class="tab" data-tab="historico">Histórico</button>
+            </nav>
 
-            <!-- Daily Tasks -->
-            <section class="section">
-                <h2 class="section-title">Rotina do Dia <span id="progress-text">0%</span></h2>
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="tab-rotina">
                 <div class="task-list" id="task-list"></div>
-            </section>
+            </div>
 
-            <!-- Quick Actions -->
-            <section class="section">
-                <h2 class="section-title">Ações Rápidas</h2>
-                <div class="actions-grid" id="actions-grid">
+            <div class="tab-content" id="tab-acoes">
+                <div class="actions-grid">
                     <button class="action-btn" data-action="carinho" data-points="5" data-emoji="🤗">
-                        <span class="action-emoji">🤗</span>
-                        <span class="action-label">Carinho</span>
-                        <span class="action-points">+5</span>
+                        <span>🤗</span><small>Carinho +5</small>
                     </button>
                     <button class="action-btn" data-action="comida" data-points="10" data-emoji="🍖">
-                        <span class="action-emoji">🍖</span>
-                        <span class="action-label">Comida</span>
-                        <span class="action-points">+10</span>
+                        <span>🍖</span><small>Comida +10</small>
                     </button>
                     <button class="action-btn" data-action="passeio" data-points="15" data-emoji="🦮">
-                        <span class="action-emoji">🦮</span>
-                        <span class="action-label">Passeio</span>
-                        <span class="action-points">+15</span>
+                        <span>🦮</span><small>Passeio +15</small>
                     </button>
                     <button class="action-btn" data-action="agua" data-points="5" data-emoji="💧">
-                        <span class="action-emoji">💧</span>
-                        <span class="action-label">Água</span>
-                        <span class="action-points">+5</span>
+                        <span>💧</span><small>Água +5</small>
                     </button>
                     <button class="action-btn" data-action="brincar" data-points="12" data-emoji="🎾">
-                        <span class="action-emoji">🎾</span>
-                        <span class="action-label">Brincar</span>
-                        <span class="action-points">+12</span>
+                        <span>🎾</span><small>Brincar +12</small>
                     </button>
                     <button class="action-btn" data-action="banho" data-points="8" data-emoji="🛁">
-                        <span class="action-emoji">🛁</span>
-                        <span class="action-label">Banho</span>
-                        <span class="action-points">+8</span>
+                        <span>🛁</span><small>Banho +8</small>
                     </button>
                 </div>
-            </section>
+            </div>
 
-            <!-- Timeline -->
-            <section class="section">
-                <h2 class="section-title">Histórico</h2>
-                <div class="timeline-list" id="timeline-list">
-                    <p class="empty-timeline">Nenhuma atividade ainda</p>
+            <div class="tab-content" id="tab-historico">
+                <div class="timeline" id="timeline">
+                    <p class="empty">Nenhuma atividade</p>
                 </div>
-            </section>
+            </div>
 
-            <!-- Settings -->
-            <button class="settings-btn" id="settings-btn">⚙️</button>
+            <!-- AI Card (se configurado) -->
+            <div class="ai-tip" id="ai-tip" style="display: none;">
+                <span>✨</span>
+                <p id="ai-message">Dica...</p>
+            </div>
         </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="modal-box">
+                <div class="modal-head">
                     <h2>Configurações</h2>
-                    <button class="modal-close" id="close-settings">&times;</button>
+                    <button class="btn-close" id="close-settings">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="api-key">Gemini API Key</label>
-                        <input type="password" id="api-key" placeholder="Cole sua API key aqui">
-                        <small class="form-hint">Obtenha grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></small>
+                    <label>Gemini API Key</label>
+                    <input type="text" id="api-key" placeholder="Cole sua API key">
+                    <small><a href="https://aistudio.google.com/apikey" target="_blank">Obter grátis</a></small>
+
+                    <div class="modal-buttons">
+                        <button class="btn" id="save-api-btn">✨ Salvar API</button>
+                        <button class="btn" id="edit-pet-btn">✏️ Editar Pet</button>
+                        <button class="btn danger" id="reset-btn">🗑️ Resetar</button>
                     </div>
-                    <button class="btn-secondary" id="save-api-btn">✨ Salvar API Key</button>
-                    <button class="btn-secondary" id="edit-pet-btn">✏️ Editar Pet</button>
-                    <button class="btn-danger" id="reset-btn">🗑️ Resetar Dados</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Reaction Modal -->
+        <div id="reaction-modal" class="modal" style="display: none;">
+            <div class="modal-box reaction">
+                <div class="reaction-emoji" id="reaction-emoji">🐕</div>
+                <p id="reaction-text">...</p>
+                <button class="btn" id="close-reaction">OK</button>
             </div>
         </div>
 
         <!-- Celebration Modal -->
-        <div id="celebration-modal" class="modal celebration" style="display: none;">
-            <div class="modal-content">
+        <div id="celebration-modal" class="modal" style="display: none;">
+            <div class="modal-box celebration">
                 <div class="celebration-emoji">🎉</div>
                 <h2>Parabéns!</h2>
-                <p id="celebration-msg">Todas as tasks concluídas!</p>
-                <button class="btn-primary" id="close-celebration">Continuar</button>
-            </div>
-        </div>
-
-        <!-- Pet Reaction Modal -->
-        <div id="reaction-modal" class="modal" style="display: none;">
-            <div class="modal-content reaction-content">
-                <div class="reaction-emoji" id="reaction-emoji">🐕</div>
-                <p class="reaction-text" id="reaction-text">...</p>
-                <button class="btn-primary" id="close-reaction">Fechar</button>
+                <p id="celebration-msg">Todas as tasks!</p>
+                <button class="btn" id="close-celebration">Continuar</button>
             </div>
         </div>
     </div>
