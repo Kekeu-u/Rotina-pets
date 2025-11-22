@@ -1,6 +1,6 @@
 /**
  * PetCare v2 - Gamified Pet Wellness
- * Clean & Minimal Implementation
+ * With Gemini AI Integration
  */
 
 // Config
@@ -104,7 +104,10 @@ function reset() {
 function showScreen(name) {
     $$('.screen').forEach(s => s.classList.remove('active'));
     $(`#${name}-screen`).classList.add('active');
-    if (name === 'dashboard') updateDashboard();
+    if (name === 'dashboard') {
+        updateDashboard();
+        loadAIContent();
+    }
 }
 
 // Setup
@@ -228,7 +231,7 @@ function renderTimeline() {
 }
 
 // Actions
-function completeTask(id) {
+async function completeTask(id) {
     if (state.completedTasks.includes(id)) return;
 
     const task = TASKS.find(t => t.id === id);
@@ -242,17 +245,27 @@ function completeTask(id) {
     save();
     updateDashboard();
 
+    // Show AI reaction if configured
+    if (AI && AI.isConfigured()) {
+        showPetReaction(task.name, task.emoji);
+    }
+
     if (state.completedTasks.length === TASKS.length) {
         celebrate();
     }
 }
 
-function handleQuickAction(action, points, emoji) {
+async function handleQuickAction(action, points, emoji) {
     addPoints(points, emoji);
     addHappiness(Math.round(points * 0.5));
     addActivity(ACTION_NAMES[action] || action, emoji, points);
     save();
     updateDashboard();
+
+    // Show AI reaction if configured
+    if (AI && AI.isConfigured()) {
+        showPetReaction(ACTION_NAMES[action] || action, emoji);
+    }
 }
 
 function addPoints(pts, emoji) {
@@ -281,6 +294,72 @@ function celebrate() {
     $('#celebration-modal').style.display = 'flex';
 }
 
+// AI Integration
+async function loadAIContent() {
+    if (!AI || !AI.isConfigured() || !state.pet) {
+        $('#ai-card').style.display = 'none';
+        return;
+    }
+
+    const aiCard = $('#ai-card');
+    const aiMessage = $('#ai-message');
+    const aiTitle = $('#ai-title');
+
+    aiCard.style.display = 'block';
+    aiMessage.textContent = 'Carregando...';
+    aiMessage.classList.add('loading');
+    aiTitle.textContent = 'Dica do Dia';
+
+    try {
+        const tip = await AI.getDailyTip(
+            state.pet.name,
+            state.pet.breed,
+            state.pet.age,
+            state.pet.personality
+        );
+
+        if (tip) {
+            aiMessage.textContent = tip;
+        } else {
+            aiMessage.textContent = 'Cuide bem do seu pet hoje! 🐕';
+        }
+    } catch (e) {
+        aiMessage.textContent = 'Cuide bem do seu pet hoje! 🐕';
+    }
+
+    aiMessage.classList.remove('loading');
+}
+
+async function showPetReaction(taskName, emoji) {
+    if (!AI || !AI.isConfigured() || !state.pet) return;
+
+    const modal = $('#reaction-modal');
+    const reactionText = $('#reaction-text');
+    const reactionEmoji = $('#reaction-emoji');
+
+    reactionEmoji.textContent = emoji;
+    reactionText.textContent = 'Pensando...';
+    modal.style.display = 'flex';
+
+    try {
+        const reaction = await AI.getPetReaction(
+            state.pet.name,
+            state.pet.breed,
+            state.pet.age,
+            taskName,
+            state.happiness
+        );
+
+        if (reaction) {
+            reactionText.textContent = reaction;
+        } else {
+            reactionText.textContent = `${state.pet.name} está feliz com isso! 🐕`;
+        }
+    } catch (e) {
+        reactionText.textContent = `${state.pet.name} está feliz com isso! 🐕`;
+    }
+}
+
 // Happiness decay
 function startDecay() {
     setInterval(() => {
@@ -304,8 +383,29 @@ function initEvents() {
     });
 
     // Settings
-    $('#settings-btn').onclick = () => $('#settings-modal').style.display = 'flex';
+    $('#settings-btn').onclick = () => {
+        // Load current API key if exists
+        if (AI && AI.isConfigured()) {
+            $('#api-key').value = '••••••••••••••••';
+        }
+        $('#settings-modal').style.display = 'flex';
+    };
     $('#close-settings').onclick = () => $('#settings-modal').style.display = 'none';
+
+    // Save API Key
+    $('#save-api-btn').onclick = () => {
+        const key = $('#api-key').value.trim();
+        if (key && key !== '••••••••••••••••') {
+            AI.init(key);
+            alert('API Key salva! A IA está ativada.');
+            $('#settings-modal').style.display = 'none';
+            loadAIContent();
+        } else if (!key) {
+            AI.clear();
+            alert('API Key removida.');
+            $('#ai-card').style.display = 'none';
+        }
+    };
 
     // Edit pet
     $('#edit-pet-btn').onclick = () => {
@@ -333,6 +433,9 @@ function initEvents() {
     // Celebration
     $('#close-celebration').onclick = () => $('#celebration-modal').style.display = 'none';
 
+    // Reaction modal
+    $('#close-reaction').onclick = () => $('#reaction-modal').style.display = 'none';
+
     // Close modals on backdrop
     $$('.modal').forEach(m => {
         m.onclick = (e) => { if (e.target === m) m.style.display = 'none'; };
@@ -345,6 +448,11 @@ function init() {
     initSetup();
     initEvents();
 
+    // Load AI module
+    if (window.AI) {
+        AI.load();
+    }
+
     if (state.pet) {
         showScreen('dashboard');
     } else {
@@ -354,7 +462,7 @@ function init() {
     startDecay();
     setInterval(() => state.pet && renderTasks(), 60000);
 
-    console.log('PetCare v2 initialized 🐕');
+    console.log('PetCare v2 + AI initialized 🐕✨');
 }
 
 document.addEventListener('DOMContentLoaded', init);

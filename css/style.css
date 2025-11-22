@@ -696,3 +696,109 @@ body {
 .screen.active {
     display: block;
 }
+
+/* AI Card */
+.ai-card {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ai-icon {
+    font-size: 1rem;
+}
+
+.ai-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-message {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.ai-message.loading {
+    opacity: 0.5;
+    animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Reaction Modal */
+.reaction-content {
+    text-align: center;
+    padding: 32px 24px;
+}
+
+.reaction-emoji {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    animation: bounce 0.6s ease infinite alternate;
+}
+
+.reaction-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+/* Form hint */
+.form-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.form-hint a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.form-hint a:hover {
+    text-decoration: underline;
+}
+
+/* API status indicator */
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.api-status.connected {
+    color: var(--success);
+}
+
+.api-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+}
+
+.api-status.connected .api-status-dot {
+    background: var(--success);
+}

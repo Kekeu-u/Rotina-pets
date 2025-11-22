@@ -3,12 +3,13 @@
  * Enables offline functionality and caching
  */
 
-const CACHE_NAME = 'petcare-v1';
+const CACHE_NAME = 'petcare-v2';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/css/style.css',
     '/js/app.js',
+    '/js/ai.js',
     '/manifest.json'
 ];
 

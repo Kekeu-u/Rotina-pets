@@ -95,6 +95,15 @@
                 </div>
             </div>
 
+            <!-- AI Card -->
+            <div class="ai-card" id="ai-card" style="display: none;">
+                <div class="ai-header">
+                    <span class="ai-icon">✨</span>
+                    <span class="ai-title" id="ai-title">Dica do Dia</span>
+                </div>
+                <p class="ai-message" id="ai-message">Carregando...</p>
+            </div>
+
             <!-- Daily Tasks -->
             <section class="section">
                 <h2 class="section-title">Rotina do Dia <span id="progress-text">0%</span></h2>
@@ -158,6 +167,12 @@
                     <button class="modal-close" id="close-settings">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div class="form-group">
+                        <label for="api-key">Gemini API Key</label>
+                        <input type="password" id="api-key" placeholder="Cole sua API key aqui">
+                        <small class="form-hint">Obtenha grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></small>
+                    </div>
+                    <button class="btn-secondary" id="save-api-btn">✨ Salvar API Key</button>
                     <button class="btn-secondary" id="edit-pet-btn">✏️ Editar Pet</button>
                     <button class="btn-danger" id="reset-btn">🗑️ Resetar Dados</button>
                 </div>
@@ -173,8 +188,18 @@
                 <button class="btn-primary" id="close-celebration">Continuar</button>
             </div>
         </div>
+
+        <!-- Pet Reaction Modal -->
+        <div id="reaction-modal" class="modal" style="display: none;">
+            <div class="modal-content reaction-content">
+                <div class="reaction-emoji" id="reaction-emoji">🐕</div>
+                <p class="reaction-text" id="reaction-text">...</p>
+                <button class="btn-primary" id="close-reaction">Fechar</button>
+            </div>
+        </div>
     </div>
 
+    <script src="js/ai.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
