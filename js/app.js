@@ -30,7 +30,6 @@ const ACTIONS = {
 
 let state = {
     pet: null,
-    petId: null,
     happiness: 50,
     done: [],
     history: [],
@@ -38,8 +37,6 @@ let state = {
     points: 0,
     lastDate: null
 };
-
-let currentUser = null;
 
 // Utils
 const $ = s => document.querySelector(s);
@@ -56,10 +53,6 @@ function hideLoading() { $('#loading').style.display = 'none'; }
 // Storage
 function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    // Sync to Supabase if logged in
-    if (currentUser && state.petId) {
-        syncToSupabase();
-    }
 }
 
 function load() {
@@ -68,85 +61,6 @@ function load() {
         state = { ...state, ...JSON.parse(d) };
         if (state.lastDate !== today()) newDay();
     }
-}
-
-async function syncToSupabase() {
-    if (!window.Supabase?.isLoggedIn() || !state.petId) return;
-
-    try {
-        // Upsert daily stats
-        await Supabase.upsert('daily_stats', {
-            pet_id: state.petId,
-            date: today(),
-            happiness: Math.round(state.happiness),
-            completed_tasks: state.done,
-            total_points: state.points
-        });
-
-        // Update streak
-        await Supabase.upsert('streaks', {
-            pet_id: state.petId,
-            current_streak: state.streak,
-            longest_streak: Math.max(state.streak, state.longestStreak || 0),
-            last_completed_date: state.done.length === TASKS.length ? today() : state.lastDate
-        });
-    } catch (e) {
-        console.error('Sync error:', e);
-    }
-}
-
-async function loadFromSupabase() {
-    if (!window.Supabase?.isLoggedIn()) return false;
-
-    try {
-        const user = Supabase.getStoredUser();
-        if (!user) return false;
-
-        // Load pet
-        const pets = await Supabase.query('pets', {
-            select: '*',
-            eq: { user_id: user.id }
-        });
-
-        if (pets && pets.length > 0) {
-            const pet = pets[0];
-            state.pet = {
-                name: pet.name,
-                breed: pet.breed,
-                photo: pet.photo_url || DEFAULT_PHOTO
-            };
-            state.petId = pet.id;
-
-            // Load today's stats
-            const stats = await Supabase.query('daily_stats', {
-                select: '*',
-                eq: { pet_id: pet.id, date: today() }
-            });
-
-            if (stats && stats.length > 0) {
-                state.happiness = stats[0].happiness;
-                state.done = stats[0].completed_tasks || [];
-                state.points = stats[0].total_points;
-            }
-
-            // Load streak
-            const streaks = await Supabase.query('streaks', {
-                select: '*',
-                eq: { pet_id: pet.id }
-            });
-
-            if (streaks && streaks.length > 0) {
-                state.streak = streaks[0].current_streak;
-            }
-
-            state.lastDate = today();
-            save();
-            return true;
-        }
-    } catch (e) {
-        console.error('Load from Supabase error:', e);
-    }
-    return false;
 }
 
 function newDay() {
@@ -172,37 +86,15 @@ function show(name) {
     if (name === 'dashboard') update();
 }
 
-// Auth
+// Auth - Simplified (local mode only)
 async function handleAuth() {
-    showLoading();
+    hideLoading();
+    load();
 
-    // Check for OAuth callback
-    const callback = await Supabase.handleAuthCallback();
-    if (callback?.user) {
-        currentUser = callback.user;
-    } else if (Supabase.isLoggedIn()) {
-        currentUser = Supabase.getStoredUser();
-    }
-
-    if (currentUser) {
-        // Try to load from Supabase
-        const hasPet = await loadFromSupabase();
-        hideLoading();
-
-        if (hasPet) {
-            show('dashboard');
-        } else {
-            show('setup');
-        }
+    if (state.pet) {
+        show('dashboard');
     } else {
-        hideLoading();
-        // Check local storage for offline mode
-        load();
-        if (state.pet) {
-            show('dashboard');
-        } else {
-            show('login');
-        }
+        show('login');
     }
 }
 
@@ -228,9 +120,8 @@ function initSetup() {
         }
     };
 
-    $('#pet-form').onsubmit = async e => {
+    $('#pet-form').onsubmit = e => {
         e.preventDefault();
-        showLoading();
 
         const name = $('#pet-name').value.trim();
         const breed = $('#pet-breed').value.trim();
@@ -240,37 +131,7 @@ function initSetup() {
         state.lastDate = today();
         state.happiness = 50;
 
-        // Save to Supabase if logged in
-        if (currentUser && Supabase.isLoggedIn()) {
-            try {
-                const petData = {
-                    user_id: currentUser.id,
-                    name: name,
-                    breed: breed,
-                    photo_url: photo.startsWith('data:') ? null : photo
-                };
-
-                // Upload photo if it's a base64 image
-                if (photo.startsWith('data:') && photo !== DEFAULT_PHOTO) {
-                    // Convert base64 to blob
-                    const response = await fetch(photo);
-                    const blob = await response.blob();
-                    const fileName = `${currentUser.id}/${Date.now()}.jpg`;
-                    const photoUrl = await Supabase.uploadFile('pet-photos', fileName, blob);
-                    if (photoUrl) petData.photo_url = photoUrl;
-                }
-
-                const result = await Supabase.insert('pets', petData);
-                if (result && result.length > 0) {
-                    state.petId = result[0].id;
-                }
-            } catch (e) {
-                console.error('Save pet error:', e);
-            }
-        }
-
         save();
-        hideLoading();
         show('dashboard');
     };
 }
@@ -334,7 +195,7 @@ function renderTimeline() {
 }
 
 // Actions
-async function doTask(id) {
+function doTask(id) {
     if (state.done.includes(id)) return;
     const t = TASKS.find(x => x.id === id);
     if (!t) return;
@@ -346,46 +207,16 @@ async function doTask(id) {
     save();
     update();
 
-    // Log activity to Supabase
-    if (currentUser && state.petId && Supabase.isLoggedIn()) {
-        try {
-            await Supabase.insert('activities', {
-                pet_id: state.petId,
-                name: t.name,
-                emoji: t.emoji,
-                points: t.pts,
-                activity_type: 'task'
-            });
-        } catch (e) {
-            console.error('Log activity error:', e);
-        }
-    }
-
     if (window.AI?.isConfigured()) showReaction(t.name, t.emoji);
     if (state.done.length === TASKS.length) celebrate();
 }
 
-async function doAction(action, pts, emoji) {
+function doAction(action, pts, emoji) {
     addPts(pts, emoji);
     state.happiness = Math.min(100, state.happiness + pts * 0.5);
     state.history.push({ name: ACTIONS[action], emoji, pts, time: now() });
     save();
     update();
-
-    // Log activity to Supabase
-    if (currentUser && state.petId && Supabase.isLoggedIn()) {
-        try {
-            await Supabase.insert('activities', {
-                pet_id: state.petId,
-                name: ACTIONS[action],
-                emoji: emoji,
-                points: pts,
-                activity_type: 'action'
-            });
-        } catch (e) {
-            console.error('Log activity error:', e);
-        }
-    }
 
     if (window.AI?.isConfigured()) showReaction(ACTIONS[action], emoji);
 }
@@ -448,14 +279,9 @@ setInterval(() => {
 
 // Events
 function initEvents() {
-    // Google Login
-    $('#google-login-btn').onclick = () => {
-        if (window.Supabase) {
-            showLoading();
-            Supabase.signInWithGoogle();
-        } else {
-            alert('Supabase não configurado. Configure a ANON_KEY em js/supabase.js');
-        }
+    // Start button (login screen)
+    $('#start-btn').onclick = () => {
+        show('setup');
     };
 
     // Tabs
@@ -481,19 +307,6 @@ function initEvents() {
     $('#settings-btn').onclick = () => {
         const key = localStorage.getItem('petcare_gemini_key');
         $('#api-key').value = key || '';
-
-        // Show user info
-        if (currentUser) {
-            const userInfo = $('#user-info');
-            const userName = currentUser.user_metadata?.full_name || currentUser.email || 'Usuário';
-            const userPhoto = currentUser.user_metadata?.avatar_url || DEFAULT_PHOTO;
-            $('#user-avatar').src = userPhoto;
-            $('#user-name').textContent = userName;
-            userInfo.style.display = 'flex';
-        } else {
-            $('#user-info').style.display = 'none';
-        }
-
         $('#settings-modal').style.display = 'flex';
     };
 
@@ -532,30 +345,22 @@ function initEvents() {
         show('setup');
     };
 
-    // Logout (Sair)
-    $('#logout-btn').onclick = async () => {
-        $('#settings-modal').style.display = 'none';
-        showLoading();
-
-        if (window.Supabase?.isLoggedIn()) {
-            await Supabase.signOut();
+    // Logout (Apagar dados)
+    $('#logout-btn').onclick = () => {
+        if (confirm('Apagar todos os dados do app?')) {
+            $('#settings-modal').style.display = 'none';
+            localStorage.removeItem(STORAGE_KEY);
+            state = {
+                pet: null,
+                happiness: 50,
+                done: [],
+                history: [],
+                streak: 0,
+                points: 0,
+                lastDate: null
+            };
+            show('login');
         }
-
-        localStorage.removeItem(STORAGE_KEY);
-        currentUser = null;
-        state = {
-            pet: null,
-            petId: null,
-            happiness: 50,
-            done: [],
-            history: [],
-            streak: 0,
-            points: 0,
-            lastDate: null
-        };
-
-        hideLoading();
-        show('login');
     };
 
     // Modals
@@ -568,15 +373,13 @@ function initEvents() {
 }
 
 // Init
-async function init() {
-    showLoading();
+function init() {
     load();
     initSetup();
     initEvents();
     if (window.AI) AI.load();
-    if (window.Supabase) Supabase.load();
 
-    await handleAuth();
+    handleAuth();
 
     console.log('PetCare v3 🐕');
 }
