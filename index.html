@@ -4,127 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="PetCare - Seu companheiro gamificado para cuidados com pets">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icon-192.svg">
-
-    <title>PetCare - Gamified Pet Wellness</title>
-
     <link rel="stylesheet" href="css/style.css">
+
+    <title>PetCare</title>
 </head>
 <body>
     <div id="app">
         <!-- Setup Screen -->
-        <div id="setup-screen" class="screen">
-            <div class="setup-container">
-                <div class="setup-header">
-                    <h1>PetCare</h1>
-                    <p class="subtitle">Seu companheiro de bem-estar pet</p>
+        <div id="setup-screen" class="screen active">
+            <div class="setup-header">
+                <h1>PetCare</h1>
+                <p class="subtitle">Cuidado gamificado para seu pet</p>
+            </div>
+
+            <form id="pet-form" class="setup-form">
+                <div class="photo-upload">
+                    <div class="photo-preview" id="photo-preview">
+                        <span class="photo-placeholder">🐕</span>
+                        <img id="preview-image" src="" alt="" style="display: none;">
+                    </div>
+                    <input type="file" id="pet-photo" accept="image/*" hidden>
+                    <label for="pet-photo" class="photo-label">Toque para adicionar foto</label>
                 </div>
 
-                <form id="pet-form" class="setup-form">
-                    <div class="photo-upload">
-                        <div class="photo-preview" id="photo-preview">
-                            <span class="photo-placeholder">+</span>
-                            <img id="preview-image" src="" alt="Preview" style="display: none;">
-                        </div>
-                        <input type="file" id="pet-photo" accept="image/*" hidden>
-                        <label for="pet-photo" class="photo-label">Adicionar foto</label>
-                    </div>
+                <div class="form-group">
+                    <label for="pet-name">Nome</label>
+                    <input type="text" id="pet-name" placeholder="Ex: Thor" required>
+                </div>
 
-                    <div class="form-group">
-                        <label for="pet-name">Nome do Pet *</label>
-                        <input type="text" id="pet-name" placeholder="Ex: Thor" required>
-                    </div>
+                <div class="form-group">
+                    <label for="pet-breed">Raça</label>
+                    <input type="text" id="pet-breed" placeholder="Ex: Golden Retriever" required>
+                </div>
 
-                    <div class="form-group">
-                        <label for="pet-breed">Raça *</label>
-                        <input type="text" id="pet-breed" placeholder="Ex: Golden Retriever" required>
-                    </div>
+                <div class="form-group">
+                    <label for="pet-age">Idade</label>
+                    <input type="text" id="pet-age" placeholder="Ex: 2 anos" required>
+                </div>
 
-                    <div class="form-group">
-                        <label for="pet-age">Idade *</label>
-                        <input type="text" id="pet-age" placeholder="Ex: 2 anos" required>
-                    </div>
+                <div class="form-group">
+                    <label for="pet-personality">Sobre (opcional)</label>
+                    <textarea id="pet-personality" placeholder="Conte um pouco sobre seu pet..."></textarea>
+                </div>
 
-                    <div class="form-group">
-                        <label for="pet-personality">Personalidade</label>
-                        <textarea id="pet-personality" placeholder="Descreva a personalidade do seu pet... Ex: Brincalhão, adora correr e é muito carinhoso"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn-primary">
-                        Começar Jornada
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="btn-primary">Começar</button>
+            </form>
         </div>
 
         <!-- Dashboard Screen -->
-        <div id="dashboard-screen" class="screen" style="display: none;">
-            <!-- Hero Section -->
-            <div class="hero-section" id="hero-section">
-                <div class="hero-background" id="hero-bg"></div>
-                <div class="hero-content">
-                    <div class="pet-info">
-                        <span id="hero-pet-name">Pet</span>
-                        <span class="pet-details" id="hero-pet-details">Raça • Idade</span>
-                    </div>
-                    <div class="pet-photo-container">
-                        <img id="hero-pet-photo" src="" alt="Pet Photo" class="pet-photo">
-                    </div>
-                    <div class="happiness-badge" id="happiness-badge">
-                        <span class="happiness-emoji">😊</span>
-                        <span class="happiness-text">OK</span>
-                    </div>
+        <div id="dashboard-screen" class="screen">
+            <!-- Pet Header -->
+            <header class="pet-header">
+                <img id="pet-avatar" class="pet-avatar" src="" alt="">
+                <div class="pet-info">
+                    <h1 id="pet-name-display">Pet</h1>
+                    <p id="pet-details">Raça • Idade</p>
+                </div>
+            </header>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="tasks-done">0/7</div>
+                    <div class="stat-label">Tasks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="streak-count">0</div>
+                    <div class="stat-label">Streak</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-points">0</div>
+                    <div class="stat-label">Pontos</div>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-value" id="tasks-completed">0/7</span>
-                    <span class="stat-label">Tasks Hoje</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value" id="streak-count">0</span>
-                    <span class="stat-label">Dias Streak</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value" id="total-points">0</span>
-                    <span class="stat-label">Pontos</span>
-                </div>
-            </div>
-
-            <!-- Happiness Meter -->
-            <div class="happiness-meter-section">
-                <div class="section-header">
-                    <h2>Medidor de Felicidade</h2>
-                    <span id="happiness-value">50/100</span>
+            <!-- Happiness -->
+            <div class="happiness-card">
+                <div class="happiness-header">
+                    <h2><span id="happiness-emoji">😊</span> Felicidade</h2>
+                    <span class="happiness-level" id="happiness-level">50%</span>
                 </div>
                 <div class="happiness-bar">
                     <div class="happiness-fill" id="happiness-fill" style="width: 50%"></div>
                 </div>
             </div>
 
-            <!-- Daily Routine -->
-            <div class="routine-section">
-                <div class="section-header">
-                    <h2>Rotina Diária</h2>
-                    <span class="progress-text" id="routine-progress">0%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="routine-list" id="routine-list">
-                    <!-- Tasks serão inseridas via JavaScript -->
-                </div>
-            </div>
+            <!-- Daily Tasks -->
+            <section class="section">
+                <h2 class="section-title">Rotina do Dia <span id="progress-text">0%</span></h2>
+                <div class="task-list" id="task-list"></div>
+            </section>
 
             <!-- Quick Actions -->
-            <div class="quick-actions-section">
-                <h2>Ações Rápidas</h2>
+            <section class="section">
+                <h2 class="section-title">Ações Rápidas</h2>
                 <div class="actions-grid" id="actions-grid">
                     <button class="action-btn" data-action="carinho" data-points="5" data-emoji="🤗">
                         <span class="action-emoji">🤗</span>
@@ -157,20 +136,18 @@
                         <span class="action-points">+8</span>
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <!-- Activity Timeline -->
-            <div class="timeline-section">
-                <h2>Atividades de Hoje</h2>
+            <!-- Timeline -->
+            <section class="section">
+                <h2 class="section-title">Histórico</h2>
                 <div class="timeline-list" id="timeline-list">
-                    <p class="empty-timeline">Nenhuma atividade registrada ainda</p>
+                    <p class="empty-timeline">Nenhuma atividade ainda</p>
                 </div>
-            </div>
+            </section>
 
-            <!-- Settings Button -->
-            <button class="settings-btn" id="settings-btn" title="Configurações">
-                ⚙️
-            </button>
+            <!-- Settings -->
+            <button class="settings-btn" id="settings-btn">⚙️</button>
         </div>
 
         <!-- Settings Modal -->
@@ -181,22 +158,18 @@
                     <button class="modal-close" id="close-settings">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <button class="btn-secondary" id="edit-pet-btn">
-                        ✏️ Editar Perfil do Pet
-                    </button>
-                    <button class="btn-danger" id="reset-data-btn">
-                        🗑️ Resetar Todos os Dados
-                    </button>
+                    <button class="btn-secondary" id="edit-pet-btn">✏️ Editar Pet</button>
+                    <button class="btn-danger" id="reset-btn">🗑️ Resetar Dados</button>
                 </div>
             </div>
         </div>
 
         <!-- Celebration Modal -->
         <div id="celebration-modal" class="modal celebration" style="display: none;">
-            <div class="modal-content celebration-content">
+            <div class="modal-content">
                 <div class="celebration-emoji">🎉</div>
                 <h2>Parabéns!</h2>
-                <p id="celebration-message">Você completou todas as tasks de hoje!</p>
+                <p id="celebration-msg">Todas as tasks concluídas!</p>
                 <button class="btn-primary" id="close-celebration">Continuar</button>
             </div>
         </div>
