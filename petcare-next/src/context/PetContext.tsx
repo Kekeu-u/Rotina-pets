@@ -4,16 +4,23 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AppState, Pet, HistoryItem, Screen } from '@/types';
 import { STORAGE_KEY, TASKS, DEFAULT_PHOTO } from '@/lib/constants';
 
+const PIN_KEY = 'petcare_pin';
+
 interface PetContextType {
   state: AppState;
   screen: Screen;
   aiConfigured: boolean;
+  isAuthenticated: boolean;
+  hasPin: boolean;
   setScreen: (screen: Screen) => void;
   setPet: (pet: Pet) => void;
   completeTask: (taskId: string) => void;
   doAction: (action: string, pts: number, emoji: string, name: string) => void;
   updateHappiness: (delta: number) => void;
   saveProductPreview: (productId: string, imageData: string) => void;
+  createPin: (pin: string) => void;
+  verifyPin: (pin: string) => boolean;
+  logout: () => void;
   reset: () => void;
 }
 
@@ -30,14 +37,31 @@ const defaultState: AppState = {
 
 const PetContext = createContext<PetContextType | undefined>(undefined);
 
+// Simple hash function for PIN (not cryptographically secure, but ok for this use case)
+function hashPin(pin: string): string {
+  let hash = 0;
+  for (let i = 0; i < pin.length; i++) {
+    const char = pin.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
 export function PetProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(defaultState);
   const [screen, setScreen] = useState<Screen>('login');
   const [aiConfigured, setAiConfigured] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasPin, setHasPin] = useState(false);
 
   // Load state from localStorage
   useEffect(() => {
+    // Check if PIN exists
+    const storedPin = localStorage.getItem(PIN_KEY);
+    setHasPin(!!storedPin);
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -56,10 +80,6 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
           lastDate: today,
         }));
       }
-
-      if (parsed.pet) {
-        setScreen('dashboard');
-      }
     }
     setLoaded(true);
   }, []);
@@ -74,15 +94,15 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   // Save state to localStorage
   useEffect(() => {
-    if (loaded) {
+    if (loaded && isAuthenticated) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
-  }, [state, loaded]);
+  }, [state, loaded, isAuthenticated]);
 
   // Happiness decay
   useEffect(() => {
     const interval = setInterval(() => {
-      if (state.pet && state.happiness > 0) {
+      if (state.pet && state.happiness > 0 && isAuthenticated) {
         setState(prev => ({
           ...prev,
           happiness: Math.max(0, prev.happiness - 1),
@@ -91,7 +111,44 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [state.pet, state.happiness]);
+  }, [state.pet, state.happiness, isAuthenticated]);
+
+  const createPin = useCallback((pin: string) => {
+    const hashed = hashPin(pin);
+    localStorage.setItem(PIN_KEY, hashed);
+    setHasPin(true);
+    setIsAuthenticated(true);
+
+    // If no pet, go to setup, else dashboard
+    if (state.pet) {
+      setScreen('dashboard');
+    } else {
+      setScreen('setup');
+    }
+  }, [state.pet]);
+
+  const verifyPin = useCallback((pin: string): boolean => {
+    const storedHash = localStorage.getItem(PIN_KEY);
+    const inputHash = hashPin(pin);
+
+    if (storedHash === inputHash) {
+      setIsAuthenticated(true);
+
+      // Navigate to appropriate screen
+      if (state.pet) {
+        setScreen('dashboard');
+      } else {
+        setScreen('setup');
+      }
+      return true;
+    }
+    return false;
+  }, [state.pet]);
+
+  const logout = useCallback(() => {
+    setIsAuthenticated(false);
+    setScreen('login');
+  }, []);
 
   const setPet = useCallback((pet: Pet) => {
     const today = new Date().toISOString().split('T')[0];
@@ -149,12 +206,15 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PIN_KEY);
     setState(defaultState);
+    setIsAuthenticated(false);
+    setHasPin(false);
     setScreen('login');
   }, []);
 
   if (!loaded) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
@@ -162,12 +222,17 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       state,
       screen,
       aiConfigured,
+      isAuthenticated,
+      hasPin,
       setScreen,
       setPet,
       completeTask,
       doAction,
       updateHappiness,
       saveProductPreview,
+      createPin,
+      verifyPin,
+      logout,
       reset,
     }}>
       {children}
