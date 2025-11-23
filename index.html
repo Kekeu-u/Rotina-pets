@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="PetCare - Cuidado gamificado para seu pet">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon-192.svg">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <title>PetCare</title>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash">
+        <div class="splash-content">
+            <div class="splash-icon">🐕</div>
+            <h1 class="splash-title">PetCare</h1>
+            <p class="splash-subtitle">Rotina do seu pet</p>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div id="app" style="display: none;">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <div class="login-logo">🐕</div>
+                <h1 class="logo">PetCare</h1>
+                <p class="login-subtitle">Cuidado gamificado para seu pet</p>
+
+                <button class="btn-start" id="start-btn">Começar</button>
+
+                <p class="login-terms">Seus dados ficam salvos no seu dispositivo</p>
+            </div>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="screen">
+            <div class="setup-container">
+                <h1 class="logo">PetCare</h1>
+
+                <form id="pet-form">
+                    <div class="photo-upload" id="photo-preview">
+                        <span class="photo-icon">🐕</span>
+                        <img id="preview-image" src="" alt="" style="display: none;">
+                        <span class="photo-text">Adicionar foto</span>
+                    </div>
+                    <input type="file" id="pet-photo" accept="image/*" hidden>
+
+                    <input type="text" id="pet-name" class="input-large" placeholder="Nome do pet" required>
+                    <input type="text" id="pet-breed" class="input-small" placeholder="Raça" required>
+
+                    <button type="submit" class="btn-start">Começar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="screen">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="avatar-container" id="avatar-click">
+                        <div class="avatar-wrapper">
+                            <i data-lucide="dog" class="avatar-icon" id="pet-avatar-icon"></i>
+                            <img id="pet-avatar" class="avatar" src="" alt="" style="display: none;">
+                        </div>
+                        <div class="avatar-ai-badge" id="ai-badge">✨</div>
+                    </div>
+                    <div>
+                        <h1 id="pet-name-display">Pet</h1>
+                        <p id="pet-breed-display">Raça</p>
+                    </div>
+                </div>
+                <button class="btn-icon" id="settings-btn">⚙️</button>
+            </header>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-emoji" id="happiness-emoji">😊</span>
+                    <span class="stat-num" id="happiness-num">50</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" id="tasks-num">0/7</span>
+                    <span class="stat-label">tasks</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" id="streak-num">0</span>
+                    <span class="stat-label">dias</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" id="points-num">0</span>
+                    <span class="stat-label">pts</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <nav class="tabs">
+                <button class="tab active" data-tab="rotina">Rotina</button>
+                <button class="tab" data-tab="acoes">Ações</button>
+                <button class="tab" data-tab="loja">🛒 Loja</button>
+                <button class="tab" data-tab="historico">Histórico</button>
+            </nav>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="tab-rotina">
+                <div class="task-list" id="task-list"></div>
+            </div>
+
+            <div class="tab-content" id="tab-acoes">
+                <div class="actions-grid">
+                    <button class="action-btn" data-action="carinho" data-points="5" data-emoji="🤗">
+                        <span>🤗</span><small>Carinho +5</small>
+                    </button>
+                    <button class="action-btn" data-action="comida" data-points="10" data-emoji="🍖">
+                        <span>🍖</span><small>Comida +10</small>
+                    </button>
+                    <button class="action-btn" data-action="passeio" data-points="15" data-emoji="🦮">
+                        <span>🦮</span><small>Passeio +15</small>
+                    </button>
+                    <button class="action-btn" data-action="agua" data-points="5" data-emoji="💧">
+                        <span>💧</span><small>Água +5</small>
+                    </button>
+                    <button class="action-btn" data-action="brincar" data-points="12" data-emoji="🎾">
+                        <span>🎾</span><small>Brincar +12</small>
+                    </button>
+                    <button class="action-btn" data-action="banho" data-points="8" data-emoji="🛁">
+                        <span>🛁</span><small>Banho +8</small>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-historico">
+                <div class="timeline" id="timeline">
+                    <p class="empty">Nenhuma atividade</p>
+                </div>
+            </div>
+
+            <!-- Shop Tab -->
+            <div class="tab-content" id="tab-loja">
+                <div class="shop-container">
+                    <!-- Shop Header -->
+                    <div class="shop-header">
+                        <div class="shop-pet-preview">
+                            <i data-lucide="dog" class="shop-pet-icon" id="shop-pet-icon"></i>
+                            <img id="shop-pet-photo" class="shop-pet-img" src="" alt="" style="display: none;">
+                            <div class="shop-sparkle">✨</div>
+                        </div>
+                        <div class="shop-header-text">
+                            <h3>Presentes para <span id="shop-pet-name">seu pet</span>!</h3>
+                            <p id="shop-ai-tip">Carregando recomendação...</p>
+                        </div>
+                    </div>
+
+                    <!-- Products - Links de afiliado Mercado Livre -->
+                    <div class="shop-products" id="shop-products">
+                        <!-- Produtos serão carregados via JavaScript -->
+                    </div>
+
+                    <p class="shop-footer">Comprando aqui você ajuda o PetCare! 💜</p>
+                </div>
+            </div>
+
+            <!-- AI Tip -->
+            <div class="ai-tip" id="ai-tip" style="display: none;">
+                <span>✨</span>
+                <p id="ai-message">Dica...</p>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-head">
+                    <h2>Configurações</h2>
+                    <button class="btn-close" id="close-settings">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <label>Gemini API Key (opcional)</label>
+                    <input type="text" id="api-key" placeholder="Para ativar IA">
+                    <small><a href="https://aistudio.google.com/apikey" target="_blank">Obter grátis</a></small>
+
+                    <div class="modal-buttons">
+                        <button class="btn" id="save-api-btn">✨ Salvar API</button>
+                        <button class="btn" id="edit-pet-btn">✏️ Editar Pet</button>
+                        <button class="btn danger" id="logout-btn">🗑️ Apagar Dados</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reaction Modal -->
+        <div id="reaction-modal" class="modal" style="display: none;">
+            <div class="modal-box reaction">
+                <div class="reaction-emoji" id="reaction-emoji">🐕</div>
+                <p id="reaction-text">...</p>
+                <button class="btn" id="close-reaction">OK</button>
+            </div>
+        </div>
+
+        <!-- Celebration Modal -->
+        <div id="celebration-modal" class="modal" style="display: none;">
+            <div class="modal-box celebration">
+                <div class="celebration-emoji">🎉</div>
+                <h2>Parabéns!</h2>
+                <p id="celebration-msg">Todas as tasks!</p>
+                <button class="btn" id="close-celebration">Continuar</button>
+            </div>
+        </div>
+
+        <!-- Avatar Menu Modal -->
+        <div id="avatar-menu-modal" class="modal" style="display: none;">
+            <div class="modal-box avatar-menu">
+                <div class="avatar-menu-preview">
+                    <i data-lucide="dog" class="avatar-menu-icon" id="avatar-menu-icon"></i>
+                    <img id="avatar-menu-photo" class="avatar-menu-img" src="" alt="" style="display: none;">
+                </div>
+                <h3 id="avatar-menu-name">Pet</h3>
+
+                <div class="avatar-menu-options">
+                    <button class="avatar-option" id="avatar-upload-btn">
+                        <i data-lucide="camera"></i>
+                        <span>Enviar Foto</span>
+                    </button>
+                    <button class="avatar-option" id="avatar-remove-btn" style="display: none;">
+                        <i data-lucide="trash-2"></i>
+                        <span>Remover Foto</span>
+                    </button>
+                </div>
+
+                <!-- AI Prompt Section -->
+                <div class="ai-prompt-section">
+                    <div class="ai-prompt-header">
+                        <span><i data-lucide="sparkles"></i> Pergunte à IA</span>
+                        <span class="ai-requests-left" id="ai-requests-left">5/5</span>
+                    </div>
+                    <div class="ai-prompt-input-wrap">
+                        <input type="text" id="ai-prompt-input" class="ai-prompt-input" placeholder="Ex: Dicas de cuidado, brincadeiras..." maxlength="200">
+                        <button class="ai-prompt-send" id="ai-prompt-send">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+                    <div class="ai-response-container" id="ai-response-container" style="display: none;">
+                        <div class="ai-response-bubble">
+                            <p id="ai-response-text">...</p>
+                        </div>
+                    </div>
+                    <small class="ai-prompt-hint" id="ai-prompt-hint">Restam <span id="requests-count">5</span> pedidos hoje</small>
+                </div>
+
+                <small class="thought-hint">Toque fora para fechar</small>
+            </div>
+        </div>
+
+        <!-- Hidden file input for avatar upload -->
+        <input type="file" id="avatar-photo-input" accept="image/*" hidden>
+
+        <!-- Photo Processing Modal -->
+        <div id="photo-processing-modal" class="modal" style="display: none;">
+            <div class="modal-box processing">
+                <div class="processing-preview">
+                    <img id="processing-photo" class="processing-img" src="" alt="">
+                    <div class="processing-overlay" id="processing-overlay">
+                        <div class="processing-spinner"></div>
+                    </div>
+                    <div class="processing-check" id="processing-check" style="display: none;">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                </div>
+                <h3 id="processing-title">Processando foto...</h3>
+                <p id="processing-status">Otimizando imagem</p>
+                <div class="processing-steps">
+                    <div class="step" id="step-optimize">
+                        <i data-lucide="image"></i>
+                        <span>Otimizar</span>
+                    </div>
+                    <div class="step" id="step-analyze">
+                        <i data-lucide="scan"></i>
+                        <span>Analisar</span>
+                    </div>
+                    <div class="step" id="step-save">
+                        <i data-lucide="save"></i>
+                        <span>Salvar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
