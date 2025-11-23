@@ -30,12 +30,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className="font-sans transition-colors duration-300 overflow-hidden">
+      <body className="font-sans transition-colors duration-300">
         <ThemeProvider>
           <PetProvider>
-            <div className="w-full max-w-[430px] mx-auto h-dvh relative overflow-hidden">
-              {/* Background gradient */}
-              <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] -z-10 transition-colors duration-300" />
+            {/* Background gradient */}
+            <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] -z-10 transition-colors duration-300" />
+            {/* Main container */}
+            <div className="w-full max-w-[430px] mx-auto min-h-dvh relative">
               {children}
             </div>
           </PetProvider>
