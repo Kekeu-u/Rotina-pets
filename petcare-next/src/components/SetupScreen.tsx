@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { DEFAULT_PHOTO } from '@/lib/constants';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Camera } from 'lucide-react';
 
 interface ProcessingStep {
   id: string;
@@ -23,6 +23,7 @@ export default function SetupScreen() {
     { id: 'save', label: 'Preparando', status: 'pending' },
   ]);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const optimizeImage = (dataUrl: string): Promise<string> => {
@@ -85,6 +86,7 @@ export default function SetupScreen() {
 
     setIsProcessing(true);
     setAnalysisResult(null);
+    setUploadSuccess(false);
     setProcessingSteps([
       { id: 'optimize', label: 'Otimizando imagem', status: 'pending' },
       { id: 'analyze', label: 'Analisando pet', status: 'pending' },
@@ -102,13 +104,13 @@ export default function SetupScreen() {
 
       // Step 1: Optimize
       updateStep('optimize', 'active');
-      await sleep(500);
+      await sleep(600);
       const optimizedData = await optimizeImage(originalData);
       updateStep('optimize', 'done');
 
       // Step 2: Analyze (if AI configured and we have name/breed)
       updateStep('analyze', 'active');
-      await sleep(400);
+      await sleep(500);
       if (aiConfigured && name && breed) {
         const analysis = await analyzePhotoWithAI(name, breed);
         if (analysis) {
@@ -119,16 +121,23 @@ export default function SetupScreen() {
 
       // Step 3: Save
       updateStep('save', 'active');
-      await sleep(300);
+      await sleep(400);
       setPhoto(optimizedData);
       updateStep('save', 'done');
 
-      // Close modal after a moment
-      await sleep(800);
+      // Show success
+      setUploadSuccess(true);
+      await sleep(1000);
+
     } catch (error) {
       console.error('Error processing photo:', error);
+      alert('Erro ao processar foto. Tente novamente.');
     } finally {
       setIsProcessing(false);
+      // Reset input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -150,23 +159,45 @@ export default function SetupScreen() {
       </h1>
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="w-32 h-32 mx-auto rounded-full bg-gray-800 border-2 border-dashed border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors overflow-hidden"
-        >
-          {photo ? (
-            <img src={photo} alt="Pet" className="w-full h-full object-cover" />
-          ) : (
-            <>
-              <span className="text-4xl">🐕</span>
-              <span className="text-xs text-gray-400 mt-1">Adicionar foto</span>
-            </>
+        {/* Avatar Upload */}
+        <div className="relative w-32 h-32 mx-auto">
+          <div
+            onClick={() => !isProcessing && fileInputRef.current?.click()}
+            className={`w-full h-full rounded-full glass-card border-2 ${
+              photo ? 'border-green-500/50' : 'border-dashed border-gray-500'
+            } flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-all overflow-hidden ${
+              isProcessing ? 'opacity-50 pointer-events-none' : ''
+            }`}
+          >
+            {photo ? (
+              <img src={photo} alt="Pet" className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <Camera className="w-8 h-8 text-gray-400 mb-1" />
+                <span className="text-xs text-gray-400">Adicionar foto</span>
+              </>
+            )}
+          </div>
+
+          {/* Success indicator */}
+          {photo && !isProcessing && (
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+              <Check className="w-5 h-5 text-white" />
+            </div>
           )}
         </div>
 
+        {/* Analysis result */}
         {analysisResult && (
           <p className="text-center text-sm text-indigo-400 animate-fadeIn">
             ✨ {analysisResult}
+          </p>
+        )}
+
+        {/* Upload success message */}
+        {uploadSuccess && !analysisResult && (
+          <p className="text-center text-sm text-green-400 animate-fadeIn">
+            ✓ Foto carregada com sucesso!
           </p>
         )}
 
@@ -175,6 +206,7 @@ export default function SetupScreen() {
           ref={fileInputRef}
           onChange={handlePhotoChange}
           accept="image/*"
+          capture="environment"
           className="hidden"
         />
 
@@ -183,7 +215,7 @@ export default function SetupScreen() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome do pet"
-          className="w-full px-4 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-lg placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+          className="w-full px-4 py-4 glass-card text-lg placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
           required
         />
 
@@ -192,13 +224,14 @@ export default function SetupScreen() {
           value={breed}
           onChange={(e) => setBreed(e.target.value)}
           placeholder="Raça"
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+          className="w-full px-4 py-3 glass-card placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
           required
         />
 
         <button
           type="submit"
-          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg hover:from-indigo-500 hover:to-purple-500 transition-all"
+          disabled={!name.trim() || !breed.trim()}
+          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Começar
         </button>
@@ -206,14 +239,14 @@ export default function SetupScreen() {
 
       {/* Processing Modal */}
       {isProcessing && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-2xl p-6 max-w-xs w-full mx-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
+          <div className="glass-card p-6 max-w-xs w-full mx-4 animate-fadeIn">
             <h3 className="text-lg font-semibold text-center mb-6">Processando foto...</h3>
 
             <div className="space-y-4">
               {processingSteps.map((step) => (
                 <div key={step.id} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                     step.status === 'done'
                       ? 'bg-green-500'
                       : step.status === 'active'
@@ -221,14 +254,14 @@ export default function SetupScreen() {
                         : 'bg-gray-700'
                   }`}>
                     {step.status === 'done' ? (
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-5 h-5 text-white" />
                     ) : step.status === 'active' ? (
-                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
                     ) : (
                       <div className="w-2 h-2 bg-gray-500 rounded-full" />
                     )}
                   </div>
-                  <span className={`text-sm ${
+                  <span className={`text-sm font-medium ${
                     step.status === 'done'
                       ? 'text-green-400'
                       : step.status === 'active'

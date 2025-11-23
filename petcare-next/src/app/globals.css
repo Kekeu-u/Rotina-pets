@@ -135,9 +135,9 @@ html, body {
 
 /* Prevent iOS bounce/rubber band effect */
 body {
-  position: fixed;
   width: 100%;
   touch-action: pan-y;
+  position: relative;
 }
 
 /* Border width for spinner */
