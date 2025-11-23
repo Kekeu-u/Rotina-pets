@@ -2,8 +2,9 @@
 
 import { usePet } from '@/context/PetContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Dog, Sun, Moon } from 'lucide-react';
+import { Dog } from 'lucide-react';
 import { DEFAULT_PHOTO } from '@/lib/constants';
+import ToggleSwitch from './ui/ToggleSwitch';
 
 interface HeaderProps {
   onSettingsClick: () => void;
@@ -47,19 +48,14 @@ export default function Header({ onSettingsClick, onAvatarClick }: HeaderProps) 
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* Theme Toggle - Liquid Glass */}
-        <button
-          onClick={toggleTheme}
-          className="p-2.5 glass-button rounded-xl hover:scale-105 active:scale-95 transition-all duration-300"
-          aria-label={isDark ? 'Modo claro' : 'Modo escuro'}
-        >
-          {isDark ? (
-            <Sun className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
-          ) : (
-            <Moon className="w-5 h-5 text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-          )}
-        </button>
+      <div className="flex items-center gap-3">
+        {/* Premium Theme Toggle */}
+        <ToggleSwitch
+          checked={isDark}
+          onChange={toggleTheme}
+          variant="theme"
+          size="md"
+        />
 
         {/* Settings - Liquid Glass */}
         <button

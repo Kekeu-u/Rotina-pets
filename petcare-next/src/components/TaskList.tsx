@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { TASKS } from '@/lib/constants';
+import { useAnime } from '@/hooks/useAnime';
 
 export default function TaskList() {
   const { state, completeTask, aiConfigured } = usePet();
   const [reaction, setReaction] = useState<{ emoji: string; message: string } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { confetti, celebratePoints, bounce } = useAnime();
 
   const toMins = (t: string) => {
     const [h, m] = t.split(':').map(Number);
@@ -18,9 +21,22 @@ export default function TaskList() {
     return d.getHours() * 60 + d.getMinutes();
   };
 
-  const handleTaskClick = (taskId: string) => {
+  const handleTaskClick = (taskId: string, event: React.MouseEvent<HTMLDivElement>) => {
     const task = TASKS.find(t => t.id === taskId);
     if (!task || state.done.includes(taskId)) return;
+
+    const element = event.currentTarget;
+
+    // Animate completion
+    bounce(element);
+
+    // Show points celebration
+    celebratePoints(element, task.pts);
+
+    // Confetti for high-value tasks
+    if (task.pts >= 15 && containerRef.current) {
+      confetti(containerRef.current, 20);
+    }
 
     // Complete task immediately (não bloqueia)
     completeTask(taskId);
@@ -49,7 +65,7 @@ export default function TaskList() {
   };
 
   return (
-    <div className="space-y-3 relative">
+    <div ref={containerRef} className="space-y-3 relative">
       {/* AI Reaction Toast - Liquid Glass */}
       {reaction && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card px-5 py-4 animate-fadeInUp max-w-[90%] shadow-2xl shadow-indigo-500/20">
@@ -68,7 +84,7 @@ export default function TaskList() {
         return (
           <div
             key={task.id}
-            onClick={() => !done && handleTaskClick(task.id)}
+            onClick={(e) => !done && handleTaskClick(task.id, e)}
             style={{ animationDelay: `${index * 50}ms` }}
             className={`glass-task flex items-center gap-3 p-4 transition-all animate-fadeInUp ${
               done

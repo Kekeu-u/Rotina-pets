@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Loader from './ui/Loader';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -42,11 +43,8 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         </h1>
         <p className="text-gray-400 mb-8">Rotina do seu pet</p>
 
-        {/* Liquid glass spinner */}
-        <div className="relative w-12 h-12 mx-auto">
-          <div className="absolute inset-0 rounded-full border-3 border-gray-700/50"></div>
-          <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"></div>
-        </div>
+        {/* Premium Paw Loader */}
+        <Loader variant="paw" size="lg" />
       </div>
     </div>
   );
