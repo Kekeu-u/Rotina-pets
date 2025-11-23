@@ -8,7 +8,7 @@ import SetupScreen from '@/components/SetupScreen';
 import Dashboard from '@/components/Dashboard';
 
 export default function Home() {
-  const { loaded, screen, isAuthenticated, handleSignUp, handleSignIn } = usePet();
+  const { loaded, screen, isAuthenticated, handleSignUp, handleSignIn, handleGoogleSignIn } = usePet();
   const [showSplash, setShowSplash] = useState(true);
 
   // Show splash while loading or during splash animation
@@ -23,6 +23,7 @@ export default function Home() {
         onSuccess={() => {}}
         onSignUp={handleSignUp}
         onSignIn={handleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
       />
     );
   }

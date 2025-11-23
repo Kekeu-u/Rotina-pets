@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText, isConfigured } from '@/lib/gemini';
+import { generateText, isConfigured } from '@/lib/pollinations';
 
 export async function POST(request: NextRequest) {
   if (!isConfigured()) {
