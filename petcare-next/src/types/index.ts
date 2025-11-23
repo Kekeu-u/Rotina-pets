@@ -37,6 +37,17 @@ export interface Product {
   link: string;
 }
 
+// Produto customizado adicionado pelo usuário via link do Mercado Livre
+export interface CustomProduct {
+  id: string;
+  url: string;
+  title: string;
+  description: string;
+  image: string;
+  price?: string;
+  addedAt: string;
+}
+
 export interface AppState {
   pet: Pet | null;
   happiness: number;
@@ -47,6 +58,7 @@ export interface AppState {
   lastDate: string | null;
   productPreviews: Record<string, string>;
   taskNotes: Record<string, TaskNote>;
+  customProducts: CustomProduct[];
 }
 
 export type Screen = 'login' | 'setup' | 'dashboard';

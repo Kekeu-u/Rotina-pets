@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { AppState, Pet, Screen, TaskNote } from '@/types';
+import { AppState, Pet, Screen, TaskNote, CustomProduct } from '@/types';
 import { TASKS } from '@/lib/constants';
 import {
   supabase,
@@ -34,6 +34,8 @@ interface PetContextType {
   doAction: (action: string, pts: number, emoji: string, name: string) => void;
   updateHappiness: (delta: number) => void;
   saveProductPreview: (productId: string, imageData: string) => void;
+  addCustomProduct: (product: Omit<CustomProduct, 'id' | 'addedAt'>) => void;
+  removeCustomProduct: (productId: string) => void;
   handleSignUp: (email: string, password: string) => Promise<{ error: any }>;
   handleSignIn: (email: string, password: string) => Promise<{ error: any }>;
   handleGoogleSignIn: () => Promise<{ error: any }>;
@@ -51,6 +53,7 @@ const defaultState: AppState = {
   lastDate: null,
   productPreviews: {},
   taskNotes: {},
+  customProducts: [],
 };
 
 const PetContext = createContext<PetContextType | undefined>(undefined);
@@ -366,6 +369,26 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const addCustomProduct = useCallback((product: Omit<CustomProduct, 'id' | 'addedAt'>) => {
+    const newProduct: CustomProduct = {
+      ...product,
+      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      addedAt: new Date().toISOString(),
+    };
+
+    setState(prev => ({
+      ...prev,
+      customProducts: [...prev.customProducts, newProduct],
+    }));
+  }, []);
+
+  const removeCustomProduct = useCallback((productId: string) => {
+    setState(prev => ({
+      ...prev,
+      customProducts: prev.customProducts.filter(p => p.id !== productId),
+    }));
+  }, []);
+
   const reset = useCallback(async () => {
     if (user) {
       const deviceId = user.email || user.id;
@@ -397,6 +420,8 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       doAction,
       updateHappiness,
       saveProductPreview,
+      addCustomProduct,
+      removeCustomProduct,
       handleSignUp,
       handleSignIn,
       handleGoogleSignIn,

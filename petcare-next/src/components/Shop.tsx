@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { SHOP_PRODUCTS, DEFAULT_PHOTO } from '@/lib/constants';
-import { Clock, Sparkles, Download, RefreshCw, Package, Upload, ImagePlus, X, Camera } from 'lucide-react';
+import { Clock, Sparkles, Download, RefreshCw, Package, Upload, ImagePlus, X, Camera, Link2, Plus, Trash2, ExternalLink, Loader2 } from 'lucide-react';
+import LinkPreview from './LinkPreview';
 
 // Product image with fallback
 function ProductImage({ src, alt, hasPreview }: { src: string; alt: string; hasPreview: boolean }) {
@@ -37,7 +38,7 @@ function ProductImage({ src, alt, hasPreview }: { src: string; alt: string; hasP
 }
 
 export default function Shop() {
-  const { state, aiConfigured, saveProductPreview } = usePet();
+  const { state, aiConfigured, saveProductPreview, addCustomProduct, removeCustomProduct } = usePet();
   const [generating, setGenerating] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<{ image: string; productName: string } | null>(null);
   const [autoGenerating, setAutoGenerating] = useState(false);
@@ -48,6 +49,18 @@ export default function Shop() {
   const [customProductImage, setCustomProductImage] = useState<string | null>(null);
   const [combiningImages, setCombiningImages] = useState(false);
   const productImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados para adicionar link do Mercado Livre
+  const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [loadingLink, setLoadingLink] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkPreviewData, setLinkPreviewData] = useState<{
+    title: string;
+    description: string;
+    image: string;
+    price?: string;
+  } | null>(null);
 
   const hasPhoto = state.pet?.photo && state.pet.photo !== DEFAULT_PHOTO;
 
@@ -212,6 +225,73 @@ export default function Shop() {
     setProductImageModal({ productId, productName });
   };
 
+  // Busca preview do link do Mercado Livre
+  const fetchLinkPreview = async () => {
+    if (!linkUrl.trim()) return;
+
+    // Valida se é um link do Mercado Livre
+    if (!linkUrl.includes('mercadolivre.com') && !linkUrl.includes('mercadolibre.com')) {
+      setLinkError('Cole um link do Mercado Livre');
+      return;
+    }
+
+    setLoadingLink(true);
+    setLinkError(null);
+    setLinkPreviewData(null);
+
+    try {
+      const res = await fetch('/api/link-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: linkUrl }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao buscar preview');
+      }
+
+      setLinkPreviewData({
+        title: data.title,
+        description: data.description,
+        image: data.image,
+        price: data.price,
+      });
+    } catch (err: any) {
+      setLinkError(err.message || 'Erro ao buscar preview');
+    } finally {
+      setLoadingLink(false);
+    }
+  };
+
+  // Adiciona o produto customizado
+  const handleAddCustomProduct = () => {
+    if (!linkPreviewData) return;
+
+    addCustomProduct({
+      url: linkUrl,
+      title: linkPreviewData.title,
+      description: linkPreviewData.description,
+      image: linkPreviewData.image,
+      price: linkPreviewData.price,
+    });
+
+    // Reset modal state
+    setShowAddLinkModal(false);
+    setLinkUrl('');
+    setLinkPreviewData(null);
+    setLinkError(null);
+  };
+
+  // Reset modal ao fechar
+  const closeAddLinkModal = () => {
+    setShowAddLinkModal(false);
+    setLinkUrl('');
+    setLinkPreviewData(null);
+    setLinkError(null);
+  };
+
   return (
     <div className="space-y-4">
       {/* Shop Header - Liquid Glass with gradient */}
@@ -336,6 +416,85 @@ export default function Shop() {
           );
         })}
       </div>
+
+      {/* Seção de Links Salvos do Mercado Livre */}
+      {state.customProducts.length > 0 && (
+        <div className="space-y-3 pt-4 border-t border-white/10">
+          <h3 className="font-semibold text-sm text-[var(--foreground-secondary)] flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-yellow-400" />
+            Meus Links Salvos
+          </h3>
+          {state.customProducts.map((product) => (
+            <div key={product.id} className="relative group">
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass-task flex items-center gap-3 p-3"
+              >
+                {/* Imagem do produto do ML */}
+                <div className="w-16 h-16 rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 relative shadow-lg">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-500/20 to-orange-500/20">
+                      <Package className="w-6 h-6 text-yellow-400" />
+                    </div>
+                  )}
+                  {/* Badge Mercado Livre */}
+                  <div className="absolute bottom-0 right-0 text-[10px] bg-gradient-to-r from-yellow-500 to-yellow-400 px-1.5 py-0.5 rounded-tl-lg text-black font-bold">
+                    ML
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm line-clamp-1">{product.title}</h4>
+                  <p className="text-xs text-gray-400 line-clamp-1">{product.description}</p>
+                  {product.price && (
+                    <span className="text-emerald-400 font-bold">{product.price}</span>
+                  )}
+                </div>
+
+                <ExternalLink className="w-4 h-4 text-[var(--foreground-secondary)] flex-shrink-0" />
+              </a>
+
+              {/* Botão de remover */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removeCustomProduct(product.id);
+                }}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                title="Remover link"
+              >
+                <Trash2 className="w-3 h-3 text-white" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Botão para adicionar novo link */}
+      <button
+        onClick={() => setShowAddLinkModal(true)}
+        className="w-full glass-task p-4 flex items-center justify-center gap-2 group hover:border-yellow-400/30 transition-colors"
+      >
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
+          <Plus className="w-5 h-5 text-yellow-400" />
+        </div>
+        <div className="text-left">
+          <p className="font-medium text-sm group-hover:text-white transition-colors">Adicionar link do Mercado Livre</p>
+          <p className="text-xs text-[var(--foreground-secondary)]">Cole um link e veja o preview do produto</p>
+        </div>
+      </button>
 
       <p className="text-center text-xs text-[var(--foreground-secondary)] pt-2">
         Comprando aqui você ajuda o PetCare! 🐾
@@ -506,6 +665,127 @@ export default function Shop() {
                     Criar cena
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para adicionar link do Mercado Livre */}
+      {showAddLinkModal && (
+        <div
+          className="fixed inset-0 glass-backdrop flex items-center justify-center z-50 p-4 animate-fadeIn"
+          onClick={closeAddLinkModal}
+        >
+          <div
+            className="glass-card p-5 max-w-sm w-full animate-fadeInUp max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg gradient-text flex items-center gap-2">
+                <Link2 className="w-5 h-5" />
+                Adicionar Link
+              </h3>
+              <button
+                onClick={closeAddLinkModal}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
+              </button>
+            </div>
+
+            <p className="text-sm text-[var(--foreground-secondary)] mb-4">
+              Cole um link de produto do Mercado Livre para ver o preview com imagem.
+            </p>
+
+            {/* Input do link */}
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => {
+                    setLinkUrl(e.target.value);
+                    setLinkError(null);
+                  }}
+                  placeholder="https://www.mercadolivre.com.br/..."
+                  className="flex-1 px-4 py-3 rounded-xl bg-[var(--background-secondary)] border border-white/10 focus:border-yellow-400/50 focus:outline-none transition-colors text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      fetchLinkPreview();
+                    }
+                  }}
+                />
+                <button
+                  onClick={fetchLinkPreview}
+                  disabled={loadingLink || !linkUrl.trim()}
+                  className="px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl hover:from-yellow-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingLink ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Link2 className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Erro */}
+              {linkError && (
+                <p className="text-sm text-red-400 flex items-center gap-2">
+                  <X className="w-4 h-4" />
+                  {linkError}
+                </p>
+              )}
+
+              {/* Preview do link */}
+              {linkPreviewData && (
+                <div className="glass-task p-4 space-y-3">
+                  {/* Imagem */}
+                  {linkPreviewData.image && (
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-[var(--background-secondary)]">
+                      <img
+                        src={linkPreviewData.image}
+                        alt={linkPreviewData.title}
+                        className="w-full h-full object-contain"
+                      />
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-yellow-400 rounded-lg">
+                        <span className="text-xs font-bold text-black">Mercado Livre</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info */}
+                  <div>
+                    <h4 className="font-semibold text-sm line-clamp-2">{linkPreviewData.title}</h4>
+                    {linkPreviewData.description && (
+                      <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 mt-1">
+                        {linkPreviewData.description}
+                      </p>
+                    )}
+                    {linkPreviewData.price && (
+                      <p className="text-emerald-400 font-bold mt-2">{linkPreviewData.price}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={closeAddLinkModal}
+                className="flex-1 py-3 glass-button rounded-xl hover:bg-white/10 transition-all font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddCustomProduct}
+                disabled={!linkPreviewData}
+                className="flex-1 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl hover:from-yellow-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-yellow-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-4 h-4" />
+                Salvar Link
               </button>
             </div>
           </div>
