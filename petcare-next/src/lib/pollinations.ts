@@ -8,7 +8,9 @@ export interface PollinationsOptions {
   width?: number;
   height?: number;
   seed?: number;
-  model?: 'flux' | 'flux-realism' | 'flux-anime' | 'flux-3d' | 'turbo';
+  // Modelos gratuitos: flux, turbo
+  // Modelos pagos (seed tier): seedream, nanobanana, kontext
+  model?: 'flux' | 'turbo' | 'seedream' | 'nanobanana' | 'kontext';
 }
 
 /**
@@ -20,7 +22,7 @@ export function getImageUrl(prompt: string, options: PollinationsOptions = {}): 
     width = 512,
     height = 512,
     seed = Math.floor(Math.random() * 1000000),
-    model = 'flux-realism' // Melhor para pets realistas
+    model = 'flux' // Modelo gratuito padrão
   } = options;
 
   const encodedPrompt = encodeURIComponent(prompt);

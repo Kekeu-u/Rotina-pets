@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const imageData = await generateImage(prompt, {
       width: 512,
       height: 512,
-      model: 'flux-realism'
+      model: 'flux' // Modelo gratuito
     });
 
     if (!imageData) {
