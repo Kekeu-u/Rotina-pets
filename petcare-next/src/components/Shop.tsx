@@ -30,16 +30,18 @@ export default function Shop() {
       });
 
       const data = await res.json();
+      console.log('API response:', data);
 
       if (data.image) {
         saveProductPreview(productId, data.image);
         setGeneratedImage({ image: data.image, productName });
       } else {
-        alert('Não foi possível gerar a imagem. Tente novamente.');
+        const errorMsg = data.details || data.error || 'Erro desconhecido';
+        alert(`Não foi possível gerar a imagem: ${errorMsg}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate image:', error);
-      alert('Erro ao gerar imagem.');
+      alert(`Erro ao gerar imagem: ${error?.message || 'Erro de rede'}`);
     } finally {
       setGenerating(null);
     }

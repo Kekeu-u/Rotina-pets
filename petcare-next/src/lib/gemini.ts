@@ -12,7 +12,7 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // Image generation - using fetch directly for Nano Banana
-const IMAGE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
+const IMAGE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
 export async function generateText(prompt: string): Promise<string | null> {
   if (!textModel) {
@@ -33,6 +33,8 @@ export async function generateImage(prompt: string): Promise<string | null> {
     throw new Error('Gemini API not configured');
   }
 
+  console.log('Calling image API:', IMAGE_API_URL);
+
   try {
     const response = await fetch(`${IMAGE_API_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -40,28 +42,35 @@ export async function generateImage(prompt: string): Promise<string | null> {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          responseModalities: ['TEXT', 'IMAGE'],
+          responseModalities: ['Text', 'Image'],
         },
       }),
     });
 
+    const responseText = await response.text();
+    console.log('API Response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Image API Error:', errorData);
-      throw new Error(`API request failed: ${response.status}`);
+      console.error('Image API Error Response:', responseText);
+      throw new Error(`API request failed: ${response.status} - ${responseText.substring(0, 200)}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(responseText);
+    console.log('API Response keys:', Object.keys(data));
+
     const parts = data.candidates?.[0]?.content?.parts || [];
+    console.log('Parts count:', parts.length);
 
     for (const part of parts) {
       if (part.inlineData?.mimeType?.startsWith('image/')) {
         const base64 = part.inlineData.data;
         const mimeType = part.inlineData.mimeType;
+        console.log('Found image with mimeType:', mimeType);
         return `data:${mimeType};base64,${base64}`;
       }
     }
 
+    console.log('No image found in response parts');
     return null;
   } catch (error) {
     console.error('Image generation error:', error);
