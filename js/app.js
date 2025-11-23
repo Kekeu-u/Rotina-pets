@@ -378,19 +378,141 @@ function handleAvatarUpload() {
     input.click();
 }
 
-function processAvatarUpload(file) {
+// Process uploaded avatar with visual feedback
+async function processAvatarUpload(file) {
     if (!file) return;
 
+    // Close avatar menu
+    $('#avatar-menu-modal').style.display = 'none';
+
+    // Show processing modal
+    const modal = $('#photo-processing-modal');
+    const preview = $('#processing-photo');
+    const overlay = $('#processing-overlay');
+    const check = $('#processing-check');
+    const title = $('#processing-title');
+    const status = $('#processing-status');
+    const stepOptimize = $('#step-optimize');
+    const stepAnalyze = $('#step-analyze');
+    const stepSave = $('#step-save');
+
+    // Reset state
+    overlay.style.display = 'flex';
+    check.style.display = 'none';
+    title.textContent = 'Processando foto...';
+    [stepOptimize, stepAnalyze, stepSave].forEach(s => {
+        s.classList.remove('active', 'done');
+    });
+
+    modal.style.display = 'flex';
+    initLucideIcons();
+
+    // Read file and show preview
     const reader = new FileReader();
-    reader.onload = e => {
-        state.pet.photo = e.target.result;
+    reader.onload = async (e) => {
+        const originalData = e.target.result;
+        preview.src = originalData;
+
+        // Step 1: Optimize
+        stepOptimize.classList.add('active');
+        status.textContent = 'Otimizando imagem...';
+        await sleep(600);
+
+        const optimizedData = await optimizeImage(originalData);
+        stepOptimize.classList.remove('active');
+        stepOptimize.classList.add('done');
+
+        // Step 2: Analyze (AI if available)
+        stepAnalyze.classList.add('active');
+        status.textContent = 'Analisando pet...';
+        await sleep(500);
+
+        let aiAnalysis = null;
+        if (window.AI?.isConfigured()) {
+            try {
+                aiAnalysis = await analyzePhotoWithAI();
+            } catch (err) {
+                console.log('AI analysis skipped');
+            }
+        }
+        stepAnalyze.classList.remove('active');
+        stepAnalyze.classList.add('done');
+
+        // Step 3: Save
+        stepSave.classList.add('active');
+        status.textContent = 'Salvando...';
+        await sleep(400);
+
+        state.pet.photo = optimizedData;
         save();
 
-        // Update displays
+        stepSave.classList.remove('active');
+        stepSave.classList.add('done');
+
+        // Show success
+        overlay.style.display = 'none';
+        check.style.display = 'flex';
+        title.textContent = 'Foto atualizada!';
+        status.textContent = aiAnalysis || 'Pronto para usar';
+        initLucideIcons();
+
+        // Close after delay
+        await sleep(1500);
+        modal.style.display = 'none';
+
+        // Update all displays
         updateAvatarDisplay();
-        openAvatarMenu(); // Refresh modal
+        updateShop();
     };
     reader.readAsDataURL(file);
+}
+
+// Optimize/compress image
+function optimizeImage(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Max size 400px (good for avatars)
+            const maxSize = 400;
+            let { width, height } = img;
+
+            if (width > height && width > maxSize) {
+                height = (height * maxSize) / width;
+                width = maxSize;
+            } else if (height > maxSize) {
+                width = (width * maxSize) / height;
+                height = maxSize;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compress to JPEG 80% quality
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = dataUrl;
+    });
+}
+
+// Analyze photo with AI (optional)
+async function analyzePhotoWithAI() {
+    if (!window.AI?.isConfigured() || !state.pet) return null;
+
+    try {
+        const prompt = `O usuário acabou de enviar uma foto do pet ${state.pet.name} (${state.pet.breed}). Dê uma resposta MUITO curta (máximo 8 palavras) elogiando o pet de forma carinhosa. Exemplo: "Que lindo! Foto perfeita!" ou "Adorável! Ficou ótima!"`;
+        return await AI.request(prompt);
+    } catch {
+        return null;
+    }
+}
+
+// Sleep helper
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Remove avatar photo
@@ -402,6 +524,7 @@ function removeAvatarPhoto() {
 
     // Update displays
     updateAvatarDisplay();
+    updateShop();
     openAvatarMenu(); // Refresh modal
 }
 
