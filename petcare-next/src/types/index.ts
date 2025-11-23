@@ -48,6 +48,14 @@ export interface CustomProduct {
   addedAt: string;
 }
 
+// Cache de imagens pré-carregadas dos produtos
+export interface CachedProductImage {
+  productId: string;
+  imageUrl: string;
+  cachedAt: string;
+  petPhotoHash?: string; // Para invalidar cache se foto do pet mudar
+}
+
 export interface AppState {
   pet: Pet | null;
   happiness: number;
@@ -59,6 +67,8 @@ export interface AppState {
   productPreviews: Record<string, string>;
   taskNotes: Record<string, TaskNote>;
   customProducts: CustomProduct[];
+  cachedProductImages: Record<string, CachedProductImage>;
+  isPreloadingImages: boolean;
 }
 
 export type Screen = 'login' | 'setup' | 'dashboard';

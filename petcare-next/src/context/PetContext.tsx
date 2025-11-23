@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { AppState, Pet, Screen, TaskNote, CustomProduct } from '@/types';
+import { AppState, Pet, Screen, TaskNote, CustomProduct, CachedProductImage } from '@/types';
 import { TASKS } from '@/lib/constants';
 import {
   supabase,
@@ -41,6 +41,8 @@ interface PetContextType {
   handleGoogleSignIn: () => Promise<{ error: any }>;
   logout: () => void;
   reset: () => void;
+  preloadProductImages: () => Promise<void>;
+  getCachedImageUrl: (productId: string) => string | null;
 }
 
 const defaultState: AppState = {
@@ -54,6 +56,8 @@ const defaultState: AppState = {
   productPreviews: {},
   taskNotes: {},
   customProducts: [],
+  cachedProductImages: {},
+  isPreloadingImages: false,
 };
 
 const PetContext = createContext<PetContextType | undefined>(undefined);
@@ -389,6 +393,79 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  // Pré-carrega imagens dos produtos usando URLs determinísticas
+  const preloadProductImages = useCallback(async () => {
+    if (!state.pet || !aiConfigured) return;
+
+    setState(prev => ({ ...prev, isPreloadingImages: true }));
+
+    try {
+      const res = await fetch('/api/ai/preload-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          petName: state.pet.name,
+          petBreed: state.pet.breed,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.preloadUrls) {
+        const cachedImages: Record<string, CachedProductImage> = {};
+        const preloadPromises: Promise<void>[] = [];
+
+        // Criar cache entries e pré-carregar imagens em paralelo
+        for (const [productId, urlData] of Object.entries(data.preloadUrls)) {
+          const { url } = urlData as { url: string; seed: number };
+
+          cachedImages[productId] = {
+            productId,
+            imageUrl: url,
+            cachedAt: new Date().toISOString(),
+            petPhotoHash: data.petHash,
+          };
+
+          // Pré-carrega a imagem no browser cache
+          preloadPromises.push(
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve();
+              img.onerror = () => resolve(); // Continue mesmo se falhar
+              img.src = url;
+            })
+          );
+        }
+
+        // Atualiza estado com URLs cacheadas
+        setState(prev => ({
+          ...prev,
+          cachedProductImages: cachedImages,
+        }));
+
+        // Aguarda todas as imagens serem pré-carregadas
+        await Promise.all(preloadPromises);
+        console.log('Product images preloaded successfully');
+      }
+    } catch (error) {
+      console.error('Failed to preload product images:', error);
+    } finally {
+      setState(prev => ({ ...prev, isPreloadingImages: false }));
+    }
+  }, [state.pet, aiConfigured]);
+
+  // Retorna URL cacheada de um produto
+  const getCachedImageUrl = useCallback((productId: string): string | null => {
+    return state.cachedProductImages[productId]?.imageUrl || null;
+  }, [state.cachedProductImages]);
+
+  // Auto pré-carrega quando o pet é configurado e temos AI
+  useEffect(() => {
+    if (state.pet && aiConfigured && Object.keys(state.cachedProductImages).length === 0) {
+      preloadProductImages();
+    }
+  }, [state.pet, aiConfigured]);
+
   const reset = useCallback(async () => {
     if (user) {
       const deviceId = user.email || user.id;
@@ -427,6 +504,8 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       handleGoogleSignIn,
       logout,
       reset,
+      preloadProductImages,
+      getCachedImageUrl,
     }}>
       {children}
     </PetContext.Provider>
