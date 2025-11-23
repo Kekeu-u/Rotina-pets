@@ -176,6 +176,9 @@ function updateAvatarDisplay() {
         avatar.style.display = 'none';
         if (icon) icon.style.display = 'block';
     }
+
+    // Reinit Lucide icons
+    if (window.lucide) lucide.createIcons();
 }
 
 // Shop
@@ -183,10 +186,26 @@ function updateShop() {
     if (!state.pet) return;
 
     const shopPhoto = $('#shop-pet-photo');
+    const shopIcon = $('#shop-pet-icon');
     const shopName = $('#shop-pet-name');
 
-    if (shopPhoto) shopPhoto.src = state.pet.photo || DEFAULT_PHOTO;
+    const hasPhoto = state.pet.photo && state.pet.photo !== DEFAULT_PHOTO;
+
+    if (hasPhoto) {
+        if (shopPhoto) {
+            shopPhoto.src = state.pet.photo;
+            shopPhoto.style.display = 'block';
+        }
+        if (shopIcon) shopIcon.style.display = 'none';
+    } else {
+        if (shopPhoto) shopPhoto.style.display = 'none';
+        if (shopIcon) shopIcon.style.display = 'block';
+    }
+
     if (shopName) shopName.textContent = state.pet.name;
+
+    // Reinit Lucide icons
+    if (window.lucide) lucide.createIcons();
 }
 
 async function loadShopRecommendation() {
@@ -559,6 +578,13 @@ function hideSplash() {
     setTimeout(() => splash.remove(), 500);
 }
 
+// Initialize Lucide icons globally
+function initLucideIcons() {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
 // Init
 function init() {
     load();
@@ -566,15 +592,15 @@ function init() {
     initEvents();
     if (window.AI) AI.load();
 
-    // Initialize Lucide icons
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    // Initialize Lucide icons after DOM ready
+    initLucideIcons();
 
     // Show splash for 2 seconds, then show app
     setTimeout(() => {
         hideSplash();
         handleAuth();
+        // Reinit icons after app is shown
+        setTimeout(initLucideIcons, 100);
     }, 2000);
 
     console.log('PetCare v3 🐕');
