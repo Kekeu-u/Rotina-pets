@@ -247,19 +247,124 @@ function renderShopProducts() {
     const container = $('#shop-products');
     if (!container) return;
 
+    const hasAI = window.AI?.isConfigured();
+
     container.innerHTML = SHOP_PRODUCTS.map(product => `
-        <a href="${product.link}" target="_blank" rel="noopener" class="product-card" data-product="${product.id}">
-            <div class="product-img-wrap">
-                <img src="${product.image}" alt="${product.name}" loading="lazy">
-            </div>
-            <div class="product-info">
-                <h4>${product.name}</h4>
-                <p>${product.description}</p>
-                <span class="product-price">${product.price}</span>
-            </div>
-            <div class="product-badge">${product.badge}</div>
-        </a>
+        <div class="product-card-wrap">
+            <a href="${product.link}" target="_blank" rel="noopener" class="product-card" data-product="${product.id}">
+                <div class="product-img-wrap">
+                    <img src="${product.image}" alt="${product.name}" loading="lazy" id="product-img-${product.id}">
+                </div>
+                <div class="product-info">
+                    <h4>${product.name}</h4>
+                    <p>${product.description}</p>
+                    <span class="product-price">${product.price}</span>
+                </div>
+                <div class="product-badge">${product.badge}</div>
+            </a>
+            ${hasAI ? `
+                <button class="product-ai-btn" onclick="event.stopPropagation(); generateProductImage('${product.id}', '${product.name}', '${product.description}')">
+                    <i data-lucide="sparkles"></i>
+                    <span>Ver ${state.pet?.name || 'pet'} com esse!</span>
+                </button>
+            ` : ''}
+        </div>
     `).join('');
+
+    // Reinit icons
+    if (window.lucide) lucide.createIcons();
+}
+
+// Generate image of pet with product
+async function generateProductImage(productId, productName, productDescription) {
+    if (!state.pet || !window.AI?.isConfigured()) {
+        alert('Configure sua API Key nas configurações!');
+        return;
+    }
+
+    // Show generating modal
+    showImageGeneratingModal(productName);
+
+    try {
+        console.log(`🎨 Gerando imagem: ${state.pet.name} com ${productName}`);
+
+        const imageData = await AI.generatePetWithProduct(
+            state.pet.name,
+            state.pet.breed,
+            productName,
+            productDescription
+        );
+
+        if (imageData) {
+            showGeneratedImageModal(imageData, productName);
+        } else {
+            hideImageModal();
+            alert('Não foi possível gerar a imagem. Tente novamente.');
+        }
+
+    } catch (error) {
+        console.error('Erro ao gerar imagem:', error);
+        hideImageModal();
+        alert('Erro ao gerar imagem. Verifique sua API Key.');
+    }
+}
+
+// Show generating modal
+function showImageGeneratingModal(productName) {
+    let modal = $('#image-gen-modal');
+    if (!modal) {
+        // Create modal if doesn't exist
+        const modalHTML = `
+            <div id="image-gen-modal" class="modal" style="display: flex;">
+                <div class="modal-box image-gen">
+                    <div class="image-gen-preview" id="image-gen-preview">
+                        <div class="image-gen-loading">
+                            <div class="processing-spinner"></div>
+                        </div>
+                    </div>
+                    <h3 id="image-gen-title">Gerando imagem...</h3>
+                    <p id="image-gen-status">Nano Banana está criando!</p>
+                    <div class="image-gen-actions" id="image-gen-actions" style="display: none;">
+                        <button class="btn" id="image-gen-close">Fechar</button>
+                        <a class="btn primary" id="image-gen-download" download="pet-product.png">Baixar</a>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = $('#image-gen-modal');
+
+        // Add close handler
+        $('#image-gen-close').onclick = () => hideImageModal();
+        modal.onclick = e => { if (e.target === modal) hideImageModal(); };
+    }
+
+    // Reset state
+    $('#image-gen-preview').innerHTML = '<div class="image-gen-loading"><div class="processing-spinner"></div></div>';
+    $('#image-gen-title').textContent = 'Gerando imagem...';
+    $('#image-gen-status').textContent = `${state.pet.name} com ${productName}`;
+    $('#image-gen-actions').style.display = 'none';
+    modal.style.display = 'flex';
+}
+
+// Show generated image
+function showGeneratedImageModal(imageData, productName) {
+    const preview = $('#image-gen-preview');
+    const title = $('#image-gen-title');
+    const actions = $('#image-gen-actions');
+    const download = $('#image-gen-download');
+
+    preview.innerHTML = `<img src="${imageData}" alt="${state.pet.name} com ${productName}">`;
+    title.textContent = `${state.pet.name} adorou! 🎉`;
+    download.href = imageData;
+    download.download = `${state.pet.name}-${productName}.png`;
+    actions.style.display = 'flex';
+}
+
+// Hide image modal
+function hideImageModal() {
+    const modal = $('#image-gen-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 async function loadShopRecommendation() {

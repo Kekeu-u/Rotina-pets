@@ -1,11 +1,12 @@
 /**
  * PetCare AI Module - Gemini Integration
- * Provides intelligent pet reactions and tips
+ * Provides intelligent pet reactions, tips, and image generation (Nano Banana)
  */
 
 const AI = {
     apiKey: null,
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+    imageUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent',
 
     // Initialize with API key
     init(key) {
@@ -30,7 +31,7 @@ const AI = {
         localStorage.removeItem('petcare_gemini_key');
     },
 
-    // Make API request
+    // Make text API request
     async request(prompt) {
         if (!this.apiKey) {
             throw new Error('API key not configured');
@@ -59,6 +60,65 @@ const AI = {
             console.error('AI Error:', error);
             return null;
         }
+    },
+
+    // Generate image with Nano Banana (Gemini 2.0 Flash Image)
+    async generateImage(prompt) {
+        if (!this.apiKey) {
+            throw new Error('API key not configured');
+        }
+
+        console.log('🎨 Gerando imagem com Nano Banana...');
+        console.log('📝 Prompt:', prompt);
+
+        try {
+            const response = await fetch(`${this.imageUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["TEXT", "IMAGE"]
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('API Error:', errorData);
+                throw new Error(`API request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('🎨 Resposta recebida:', data);
+
+            // Extract image from response
+            const parts = data.candidates?.[0]?.content?.parts || [];
+            for (const part of parts) {
+                if (part.inlineData?.mimeType?.startsWith('image/')) {
+                    const base64 = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType;
+                    return `data:${mimeType};base64,${base64}`;
+                }
+            }
+
+            // If no image found, return null
+            console.log('⚠️ Nenhuma imagem na resposta');
+            return null;
+
+        } catch (error) {
+            console.error('🎨 Image Generation Error:', error);
+            throw error;
+        }
+    },
+
+    // Generate pet with product image
+    async generatePetWithProduct(petName, petBreed, productName, productDescription) {
+        const prompt = `Generate a cute, photorealistic image of a ${petBreed} dog named ${petName} happily playing with a ${productName} (${productDescription}). The dog should look happy and engaged with the toy. Bright, cheerful lighting. High quality pet photography style.`;
+
+        return await this.generateImage(prompt);
     },
 
     // Generate pet reaction when completing a task
