@@ -8,15 +8,20 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
-  const { reset, setScreen, aiConfigured } = usePet();
+  const { reset, setScreen, aiConfigured, logout } = usePet();
 
   const handleEditPet = () => {
     onClose();
     setScreen('setup');
   };
 
+  const handleLogout = () => {
+    logout();
+    onClose();
+  };
+
   const handleReset = () => {
-    if (confirm('Apagar todos os dados do app?')) {
+    if (confirm('Apagar todos os dados do app? Isso também apagará seu PIN.')) {
       reset();
       onClose();
     }
@@ -55,10 +60,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
 
           <button
+            onClick={handleLogout}
+            className="w-full py-3 px-4 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-500 transition-colors text-yellow-400 flex items-center justify-center gap-2"
+          >
+            🔒 Bloquear (Logout)
+          </button>
+
+          <button
             onClick={handleReset}
             className="w-full py-3 px-4 bg-red-900/30 border border-red-700/50 rounded-xl hover:border-red-500 transition-colors text-red-400 flex items-center justify-center gap-2"
           >
-            🗑️ Apagar Dados
+            🗑️ Apagar Tudo
           </button>
         </div>
       </div>
