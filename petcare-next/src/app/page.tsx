@@ -8,11 +8,12 @@ import SetupScreen from '@/components/SetupScreen';
 import Dashboard from '@/components/Dashboard';
 
 export default function Home() {
-  const { screen, isAuthenticated, hasPin, createPin, verifyPin } = usePet();
+  const { loaded, screen, isAuthenticated, hasPin, createPin, verifyPin } = usePet();
   const [showSplash, setShowSplash] = useState(true);
   const [pinError, setPinError] = useState(false);
 
-  if (showSplash) {
+  // Show splash while loading or during splash animation
+  if (!loaded || showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 

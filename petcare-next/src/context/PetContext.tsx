@@ -7,6 +7,7 @@ import { STORAGE_KEY, TASKS, DEFAULT_PHOTO } from '@/lib/constants';
 const PIN_KEY = 'petcare_pin';
 
 interface PetContextType {
+  loaded: boolean;
   state: AppState;
   screen: Screen;
   aiConfigured: boolean;
@@ -213,12 +214,9 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     setScreen('login');
   }, []);
 
-  if (!loaded) {
-    return null;
-  }
-
   return (
     <PetContext.Provider value={{
+      loaded,
       state,
       screen,
       aiConfigured,
