@@ -37,25 +37,31 @@ export default function Actions() {
 
   return (
     <div className="relative">
-      {/* AI Reaction Toast */}
+      {/* AI Reaction Toast - Liquid Glass */}
       {reaction && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 glass-card px-4 py-3 shadow-lg animate-fadeIn max-w-[90%] border-indigo-500/50">
-          <p className="text-sm text-center">
-            <span className="text-xl mr-2">{reaction.emoji}</span>
-            {reaction.message}
-          </p>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-card px-5 py-4 animate-fadeInUp max-w-[90%] shadow-2xl shadow-indigo-500/20">
+          <div className="relative z-10 flex items-center gap-3">
+            <span className="text-2xl">{reaction.emoji}</span>
+            <p className="text-sm">{reaction.message}</p>
+          </div>
         </div>
       )}
 
       <div className="grid grid-cols-3 gap-3">
-        {Object.entries(ACTIONS).map(([key, action]) => (
+        {Object.entries(ACTIONS).map(([key, action], index) => (
           <button
             key={key}
             onClick={() => handleAction(key)}
-            className="flex flex-col items-center gap-2 p-4 glass-card hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all active:scale-95"
+            style={{ animationDelay: `${index * 75}ms` }}
+            className="glass-action flex flex-col items-center gap-2 p-4 animate-fadeInUp group"
           >
-            <span className="text-3xl">{action.emoji}</span>
-            <span className="text-xs text-gray-400">{action.name} +{action.pts}</span>
+            <span className="text-3xl relative z-10 group-hover:scale-110 transition-transform duration-300">
+              {action.emoji}
+            </span>
+            <div className="relative z-10 text-center">
+              <span className="text-xs text-gray-300 block">{action.name}</span>
+              <span className="text-xs font-bold text-emerald-400">+{action.pts}</span>
+            </div>
           </button>
         ))}
       </div>

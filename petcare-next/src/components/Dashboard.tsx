@@ -28,36 +28,37 @@ export default function Dashboard() {
         onAvatarClick={() => setShowAvatarMenu(true)}
       />
 
-      {/* Stats */}
-      <div className="flex justify-around px-4 py-2 glass border-b border-white/10 flex-shrink-0">
-        <div className="text-center">
-          <span className="text-xl">{happinessLevel?.emoji || '😊'}</span>
-          <span className="ml-1 text-base font-bold">{Math.round(state.happiness)}</span>
+      {/* Stats - Liquid Glass Style */}
+      <div className="flex justify-around px-4 py-3 glass flex-shrink-0 relative z-10">
+        <div className="flex flex-col items-center">
+          <span className="text-2xl mb-0.5">{happinessLevel?.emoji || '😊'}</span>
+          <span className="text-sm font-bold gradient-text">{Math.round(state.happiness)}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide">humor</span>
         </div>
-        <div className="text-center">
-          <span className="text-base font-bold">{state.done.length}/{TASKS.length}</span>
-          <span className="text-xs text-gray-400 ml-1">tasks</span>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-indigo-400">{state.done.length}/{TASKS.length}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide">tarefas</span>
         </div>
-        <div className="text-center">
-          <span className="text-base font-bold">{state.streak}</span>
-          <span className="text-xs text-gray-400 ml-1">dias</span>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-purple-400">{state.streak}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide">dias</span>
         </div>
-        <div className="text-center">
-          <span className="text-base font-bold">{state.points}</span>
-          <span className="text-xs text-gray-400 ml-1">pts</span>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-bold text-emerald-400">{state.points}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide">pontos</span>
         </div>
       </div>
 
-      {/* Tabs */}
-      <nav className="flex glass border-b border-white/10 flex-shrink-0">
+      {/* Tabs - Liquid Glass Pills */}
+      <nav className="flex gap-2 px-4 py-3 glass flex-shrink-0 relative z-10">
         {(['rotina', 'acoes', 'loja', 'historico'] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 text-sm font-medium transition-all ${
+            className={`flex-1 py-2 px-3 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === tab
-                ? 'text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/10'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
+                : 'glass-button text-gray-400 hover:text-white'
             }`}
           >
             {tab === 'loja' ? '🛒 Loja' : tab === 'acoes' ? 'Ações' : tab === 'historico' ? 'Histórico' : tab.charAt(0).toUpperCase() + tab.slice(1)}

@@ -92,66 +92,81 @@ export default function Shop() {
 
   return (
     <div className="space-y-4">
-      {/* Shop Header */}
-      <div className="flex items-center gap-4 p-4 glass-card border-indigo-500/30">
-        <div className="w-16 h-16 rounded-full glass border-2 border-indigo-500/50 overflow-hidden flex items-center justify-center relative">
-          {hasPhoto ? (
-            <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
-          ) : (
-            <Dog className="w-8 h-8 text-gray-400" />
-          )}
-          <div className="absolute -bottom-1 -right-1 text-sm">✨</div>
-        </div>
-        <div>
-          <h3 className="font-semibold">Presentes para {state.pet?.name || 'seu pet'}!</h3>
-          <p className="text-sm text-gray-400">
-            {autoGenerating ? (
-              <span className="flex items-center gap-2">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                Gerando previews com IA...
-              </span>
-            ) : hasPhoto ? (
-              'Veja como ficaria com cada brinquedo!'
-            ) : (
-              'Adicione uma foto para ver previews com IA'
-            )}
-          </p>
+      {/* Shop Header - Liquid Glass with gradient */}
+      <div className="glass-card p-4 animate-fadeInUp relative overflow-hidden">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none"></div>
+
+        <div className="relative z-10 flex items-center gap-4">
+          {/* Pet avatar with liquid ring */}
+          <div className="liquid-avatar-ring">
+            <div className="w-14 h-14 rounded-full bg-[var(--background)] overflow-hidden flex items-center justify-center">
+              {hasPhoto ? (
+                <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
+              ) : (
+                <Dog className="w-7 h-7 text-gray-400" />
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold gradient-text">Presentes para {state.pet?.name || 'seu pet'}!</h3>
+            <p className="text-sm text-gray-400">
+              {autoGenerating ? (
+                <span className="flex items-center gap-2">
+                  <RefreshCw className="w-3 h-3 animate-spin text-purple-400" />
+                  <span className="text-purple-300">Gerando previews com IA...</span>
+                </span>
+              ) : hasPhoto ? (
+                'Veja como ficaria com cada brinquedo!'
+              ) : (
+                'Adicione uma foto para ver previews com IA'
+              )}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Products */}
+      {/* Products - Liquid Glass Cards */}
       <div className="space-y-3">
-        {SHOP_PRODUCTS.map((product) => {
+        {SHOP_PRODUCTS.map((product, index) => {
           const hasPreview = !!state.productPreviews[product.id];
           const previewImg = state.productPreviews[product.id];
           const isGenerating = generating === product.id;
 
           return (
-            <div key={product.id} className="space-y-2">
+            <div
+              key={product.id}
+              className="space-y-2 animate-fadeInUp"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               <a
                 href={product.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 glass-card hover:border-indigo-500/50 transition-all relative"
+                className="glass-task flex items-center gap-3 p-3 group"
               >
-                <div className="w-16 h-16 rounded-lg bg-white/90 overflow-hidden flex-shrink-0 relative">
+                {/* Product image with glow effect */}
+                <div className="w-16 h-16 rounded-xl bg-white/90 overflow-hidden flex-shrink-0 relative shadow-lg group-hover:shadow-purple-500/20 transition-shadow duration-300">
                   <img
                     src={hasPreview ? previewImg : product.image}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
                   {hasPreview && (
-                    <div className="absolute bottom-0 right-0 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 px-1 rounded-tl text-white">
+                    <div className="absolute bottom-0 right-0 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 px-1.5 py-0.5 rounded-tl-lg text-white font-medium">
                       ✨ IA
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm">{product.name}</h4>
-                  <p className="text-xs text-gray-400">{product.description}</p>
-                  <span className="text-green-400 font-semibold">{product.price}</span>
+
+                <div className="flex-1 min-w-0 relative z-10">
+                  <h4 className="font-medium text-sm group-hover:text-white transition-colors">{product.name}</h4>
+                  <p className="text-xs text-gray-400 line-clamp-1">{product.description}</p>
+                  <span className="text-emerald-400 font-bold">{product.price}</span>
                 </div>
-                <div className="absolute top-2 right-2 text-xs px-2 py-0.5 glass rounded border-purple-500/30">
+
+                {/* Badge */}
+                <div className="absolute top-2 right-2 text-xs px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-purple-500/30 text-purple-300">
                   {product.badge}
                 </div>
               </a>
@@ -160,17 +175,19 @@ export default function Shop() {
                 <button
                   onClick={() => handleGenerateImage(product.id, product.name, product.description)}
                   disabled={isGenerating || autoGenerating}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-4 glass-button rounded-lg text-purple-300 text-sm hover:border-purple-500/50 transition-all disabled:opacity-50"
+                  className="w-full glass-button flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50 group"
                 >
                   {isGenerating ? (
                     <>
                       <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                      <span>Gerando...</span>
+                      <span className="text-purple-300">Gerando preview...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>{hasPreview ? 'Gerar nova imagem' : `Ver ${state.pet?.name || 'pet'} com esse!`}</span>
+                      <Sparkles className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                      <span className="text-purple-300 group-hover:text-white transition-colors">
+                        {hasPreview ? 'Gerar nova imagem' : `Ver ${state.pet?.name || 'pet'} com esse!`}
+                      </span>
                     </>
                   )}
                 </button>
@@ -184,26 +201,36 @@ export default function Shop() {
         Comprando aqui você ajuda o PetCare! 💜
       </p>
 
-      {/* Generated Image Modal */}
+      {/* Generated Image Modal - Liquid Glass */}
       {generatedImage && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setGeneratedImage(null)}>
-          <div className="glass-card p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="relative rounded-xl overflow-hidden mb-4">
+        <div
+          className="fixed inset-0 glass-backdrop flex items-center justify-center z-50 p-4 animate-fadeIn"
+          onClick={() => setGeneratedImage(null)}
+        >
+          <div
+            className="glass-card p-5 max-w-sm w-full animate-fadeInUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image with glow effect */}
+            <div className="relative rounded-2xl overflow-hidden mb-4 shadow-2xl shadow-purple-500/20">
               <img src={generatedImage.image} alt={generatedImage.productName} className="w-full" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             </div>
-            <h3 className="text-center font-semibold mb-2">{state.pet?.name} adorou! 🎉</h3>
-            <p className="text-center text-sm text-gray-400 mb-4">Imagem salva na loja!</p>
-            <div className="flex gap-2">
+
+            <h3 className="text-center font-bold text-lg gradient-text mb-1">{state.pet?.name} adorou! 🎉</h3>
+            <p className="text-center text-sm text-gray-400 mb-5">Imagem salva na loja!</p>
+
+            <div className="flex gap-3">
               <button
                 onClick={() => setGeneratedImage(null)}
-                className="flex-1 py-2 glass-button rounded-lg hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 glass-button rounded-xl hover:bg-white/10 transition-all font-medium"
               >
                 Fechar
               </button>
               <a
                 href={generatedImage.image}
                 download={`${state.pet?.name}-${generatedImage.productName}.png`}
-                className="flex-1 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-400 hover:to-purple-400 transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-indigo-500/30"
               >
                 <Download className="w-4 h-4" />
                 Baixar

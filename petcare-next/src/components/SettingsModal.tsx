@@ -28,24 +28,38 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full border border-gray-700" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Configurações</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded-lg transition-colors">
-            <X className="w-6 h-6" />
+    <div
+      className="fixed inset-0 glass-backdrop flex items-center justify-center z-50 p-4 animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        className="glass-card p-6 max-w-sm w-full animate-fadeInUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <h2 className="text-xl font-bold gradient-text">Configurações</h2>
+          <button onClick={onClose} className="p-2 glass-button rounded-xl hover:scale-105 active:scale-95 transition-all">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium">IA Gemini</span>
-              <span className={`text-sm px-2 py-0.5 rounded ${aiConfigured ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
+        <div className="space-y-4 relative z-10">
+          {/* AI Status Card */}
+          <div className="glass-task p-4">
+            <div className="flex items-center justify-between mb-2 relative z-10">
+              <span className="font-medium flex items-center gap-2">
+                <span className="text-lg">✨</span>
+                IA Gemini
+              </span>
+              <span className={`text-sm px-3 py-1 rounded-full font-medium ${
+                aiConfigured
+                  ? 'bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/20'
+                  : 'bg-gray-700/50 text-gray-400'
+              }`}>
                 {aiConfigured ? '✓ Ativo' : 'Não configurado'}
               </span>
             </div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 relative z-10">
               {aiConfigured
                 ? 'API Key configurada no servidor (.env.local)'
                 : 'Configure GEMINI_API_KEY no arquivo .env.local'}
@@ -54,21 +68,21 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
           <button
             onClick={handleEditPet}
-            className="w-full py-3 px-4 bg-gray-800 border border-gray-700 rounded-xl hover:border-indigo-500 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 glass-button rounded-xl transition-all flex items-center justify-center gap-2 font-medium hover:scale-[1.02] active:scale-[0.98]"
           >
             ✏️ Editar Pet
           </button>
 
           <button
             onClick={handleLogout}
-            className="w-full py-3 px-4 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-500 transition-colors text-yellow-400 flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 glass-button rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-yellow-400 hover:scale-[1.02] active:scale-[0.98]"
           >
             🔒 Bloquear (Logout)
           </button>
 
           <button
             onClick={handleReset}
-            className="w-full py-3 px-4 bg-red-900/30 border border-red-700/50 rounded-xl hover:border-red-500 transition-colors text-red-400 flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 glass-button rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-red-400 hover:bg-red-500/10 hover:scale-[1.02] active:scale-[0.98]"
           >
             🗑️ Apagar Tudo
           </button>
