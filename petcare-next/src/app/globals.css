@@ -2,78 +2,88 @@
 
 /* ============================================
    LIQUID GLASS DESIGN SYSTEM
-   Inspired by iOS 18 / macOS Sequoia
+   PetCare Wellness App - Clean & Professional
    ============================================ */
 
 /* Theme variables */
 :root {
-  /* Base colors */
-  --background: #0a0a12;
-  --background-secondary: #12121f;
-  --foreground: #ffffff;
+  /* Base colors - Dark Mode */
+  --background: #0f0f14;
+  --background-secondary: #16161d;
+  --foreground: #f4f4f5;
   --foreground-secondary: #a1a1aa;
 
   /* Liquid Glass - Dark Mode */
   --liquid-glass-bg: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.06) 0%,
     rgba(255, 255, 255, 0.02) 50%,
-    rgba(255, 255, 255, 0.05) 100%
+    rgba(255, 255, 255, 0.04) 100%
   );
   --liquid-glass-border: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.15) 0%,
     rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.15) 100%
+    rgba(255, 255, 255, 0.10) 100%
   );
   --liquid-glass-shine: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.08) 0%,
     rgba(255, 255, 255, 0) 50%
   );
   --liquid-glass-shadow:
-    0 4px 24px -1px rgba(0, 0, 0, 0.4),
-    0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --liquid-glass-glow: rgba(99, 102, 241, 0.15);
+    0 4px 24px -1px rgba(0, 0, 0, 0.5),
+    0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --liquid-glass-glow: rgba(99, 102, 241, 0.12);
 
-  /* Accent colors */
+  /* Accent colors - Calm & Professional palette */
   --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
-  --accent-tertiary: #ec4899;
+  --accent-secondary: #818cf8;
+  --accent-tertiary: #6366f1;
   --accent-success: #10b981;
+  --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
+
+  /* Text for accents */
+  --text-muted: #71717a;
 }
 
 .light {
-  --background: #f5f7fa;
+  /* Base colors - Light Mode */
+  --background: #f8fafc;
   --background-secondary: #ffffff;
-  --foreground: #1a1a2e;
-  --foreground-secondary: #6b7280;
+  --foreground: #18181b;
+  --foreground-secondary: #52525b;
 
   /* Liquid Glass - Light Mode */
   --liquid-glass-bg: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.85) 0%,
-    rgba(255, 255, 255, 0.65) 50%,
-    rgba(255, 255, 255, 0.75) 100%
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.8) 100%
   );
   --liquid-glass-border: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(200, 200, 220, 0.4) 50%,
-    rgba(255, 255, 255, 0.7) 100%
+    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.02) 50%,
+    rgba(0, 0, 0, 0.04) 100%
   );
   --liquid-glass-shine: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(255, 255, 255, 0.3) 50%
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.5) 50%
   );
   --liquid-glass-shadow:
-    0 4px 24px -1px rgba(0, 0, 0, 0.08),
-    0 0 1px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --liquid-glass-glow: rgba(99, 102, 241, 0.1);
+    0 4px 24px -1px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --liquid-glass-glow: rgba(99, 102, 241, 0.08);
+
+  /* Light mode specific accents */
+  --accent-primary: #4f46e5;
+  --accent-secondary: #6366f1;
+  --text-muted: #a1a1aa;
 }
 
 /* iPhone safe area support */
@@ -269,32 +279,25 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Liquid Avatar Ring */
+/* Liquid Avatar Ring - Clean rotating gradient */
 .liquid-avatar-ring {
   position: relative;
   padding: 3px;
   background: linear-gradient(
     135deg,
     var(--accent-primary) 0%,
-    var(--accent-secondary) 50%,
-    var(--accent-tertiary) 100%
+    var(--accent-secondary) 100%
   );
   border-radius: 50%;
-  animation: liquid-rotate 4s linear infinite;
+  animation: liquid-rotate 6s ease-in-out infinite;
 }
 
 @keyframes liquid-rotate {
-  0% {
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+  0%, 100% {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   }
-  33% {
-    background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 50%, var(--accent-primary) 100%);
-  }
-  66% {
-    background: linear-gradient(135deg, var(--accent-tertiary) 0%, var(--accent-primary) 50%, var(--accent-secondary) 100%);
-  }
-  100% {
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+  50% {
+    background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-primary) 100%);
   }
 }
 
@@ -390,9 +393,9 @@
   transform: translateY(0) scale(0.95);
 }
 
-/* Gradient text effect */
+/* Gradient text effect - Clean indigo gradient */
 .gradient-text {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -541,28 +544,65 @@ body {
   color: var(--foreground);
 }
 
-.light .text-gray-400 {
+.light .text-gray-400,
+.light .text-gray-500 {
   color: var(--foreground-secondary);
 }
 
+.light .text-indigo-400,
+.light .text-purple-400 {
+  color: var(--accent-primary);
+}
+
+.light .text-emerald-400 {
+  color: #059669;
+}
+
 .light .bg-gray-800\/50,
-.light .bg-gray-800 {
-  background: var(--glass-bg);
+.light .bg-gray-800,
+.light .bg-gray-700\/50 {
+  background: var(--background-secondary);
 }
 
 .light .border-gray-700,
-.light .border-gray-800 {
-  border-color: var(--glass-border);
+.light .border-gray-800,
+.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .light .bg-gray-900\/50,
 .light .bg-gray-900 {
-  background: var(--background-secondary);
+  background: var(--background);
 }
 
 /* Gradient backgrounds for light mode */
 .light .bg-gradient-to-br.from-\[\#0a0a12\] {
   background: linear-gradient(to bottom right, #e0e7ff, #f0f4f8, #e0e7ff);
+}
+
+/* Light mode shadows */
+.light .shadow-indigo-500\/30,
+.light .shadow-indigo-500\/25,
+.light .shadow-purple-500\/30,
+.light .shadow-purple-500\/50 {
+  --tw-shadow-color: rgba(79, 70, 229, 0.15);
+}
+
+.light .shadow-emerald-500\/50,
+.light .shadow-emerald-500\/30 {
+  --tw-shadow-color: rgba(5, 150, 105, 0.15);
+}
+
+/* Glass components in light mode need subtle borders */
+.light .glass,
+.light .glass-card,
+.light .glass-task,
+.light .glass-button,
+.light .glass-action {
+  box-shadow:
+    0 2px 12px -2px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* ============================================

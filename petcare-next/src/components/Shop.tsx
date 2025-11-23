@@ -3,7 +3,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { SHOP_PRODUCTS, DEFAULT_PHOTO } from '@/lib/constants';
-import { Dog, Sparkles, Download, RefreshCw } from 'lucide-react';
+import { Clock, Sparkles, Download, RefreshCw, Package } from 'lucide-react';
+
+// Product image with fallback
+function ProductImage({ src, alt, hasPreview }: { src: string; alt: string; hasPreview: boolean }) {
+  const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  if (error || !src) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
+        <Package className="w-6 h-6 text-indigo-400" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--background-secondary)]">
+          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+      />
+    </>
+  );
+}
 
 export default function Shop() {
   const { state, aiConfigured, saveProductPreview } = usePet();
@@ -95,7 +126,7 @@ export default function Shop() {
       {/* Shop Header - Liquid Glass with gradient */}
       <div className="glass-card p-4 animate-fadeInUp relative overflow-hidden">
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-indigo-400/5 pointer-events-none"></div>
 
         <div className="relative z-10 flex items-center gap-4">
           {/* Pet avatar with liquid ring */}
@@ -104,17 +135,17 @@ export default function Shop() {
               {hasPhoto ? (
                 <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
               ) : (
-                <Dog className="w-7 h-7 text-gray-400" />
+                <Clock className="w-7 h-7 text-[var(--foreground-secondary)]" />
               )}
             </div>
           </div>
           <div>
             <h3 className="font-semibold gradient-text">Presentes para {state.pet?.name || 'seu pet'}!</h3>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[var(--foreground-secondary)]">
               {autoGenerating ? (
                 <span className="flex items-center gap-2">
-                  <RefreshCw className="w-3 h-3 animate-spin text-purple-400" />
-                  <span className="text-purple-300">Gerando previews com IA...</span>
+                  <RefreshCw className="w-3 h-3 animate-spin text-indigo-400" />
+                  <span className="text-indigo-400">Gerando previews com IA...</span>
                 </span>
               ) : hasPhoto ? (
                 'Veja como ficaria com cada brinquedo!'
@@ -146,11 +177,11 @@ export default function Shop() {
                 className="glass-task flex items-center gap-3 p-3 group"
               >
                 {/* Product image with glow effect */}
-                <div className="w-16 h-16 rounded-xl bg-white/90 overflow-hidden flex-shrink-0 relative shadow-lg group-hover:shadow-purple-500/20 transition-shadow duration-300">
-                  <img
+                <div className="w-16 h-16 rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 relative shadow-lg group-hover:shadow-indigo-500/20 transition-shadow duration-300">
+                  <ProductImage
                     src={hasPreview ? previewImg : product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    hasPreview={hasPreview}
                   />
                   {hasPreview && (
                     <div className="absolute bottom-0 right-0 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 px-1.5 py-0.5 rounded-tl-lg text-white font-medium">
@@ -166,7 +197,7 @@ export default function Shop() {
                 </div>
 
                 {/* Badge */}
-                <div className="absolute top-2 right-2 text-xs px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-purple-500/30 text-purple-300">
+                <div className="absolute top-2 right-2 text-xs px-2.5 py-1 bg-indigo-500/15 rounded-full border border-indigo-500/25 text-indigo-400">
                   {product.badge}
                 </div>
               </a>
@@ -179,13 +210,13 @@ export default function Shop() {
                 >
                   {isGenerating ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-purple-300">Gerando preview...</span>
+                      <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-indigo-400">Gerando preview...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                      <span className="text-purple-300 group-hover:text-white transition-colors">
+                      <Sparkles className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+                      <span className="text-indigo-400 group-hover:text-[var(--foreground)] transition-colors">
                         {hasPreview ? 'Gerar nova imagem' : `Ver ${state.pet?.name || 'pet'} com esse!`}
                       </span>
                     </>
@@ -197,8 +228,8 @@ export default function Shop() {
         })}
       </div>
 
-      <p className="text-center text-xs text-gray-500 pt-2">
-        Comprando aqui você ajuda o PetCare! 💜
+      <p className="text-center text-xs text-[var(--foreground-secondary)] pt-2">
+        Comprando aqui você ajuda o PetCare! 🐾
       </p>
 
       {/* Generated Image Modal - Liquid Glass */}
@@ -212,13 +243,13 @@ export default function Shop() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Image with glow effect */}
-            <div className="relative rounded-2xl overflow-hidden mb-4 shadow-2xl shadow-purple-500/20">
+            <div className="relative rounded-2xl overflow-hidden mb-4 shadow-2xl shadow-indigo-500/15">
               <img src={generatedImage.image} alt={generatedImage.productName} className="w-full" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
             </div>
 
-            <h3 className="text-center font-bold text-lg gradient-text mb-1">{state.pet?.name} adorou! 🎉</h3>
-            <p className="text-center text-sm text-gray-400 mb-5">Imagem salva na loja!</p>
+            <h3 className="text-center font-bold text-lg gradient-text mb-1">{state.pet?.name} adorou!</h3>
+            <p className="text-center text-sm text-[var(--foreground-secondary)] mb-5">Imagem salva na loja!</p>
 
             <div className="flex gap-3">
               <button
@@ -230,7 +261,7 @@ export default function Shop() {
               <a
                 href={generatedImage.image}
                 download={`${state.pet?.name}-${generatedImage.productName}.png`}
-                className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-400 hover:to-purple-400 transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-indigo-500/30"
+                className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl hover:from-indigo-400 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 font-medium shadow-lg shadow-indigo-500/25"
               >
                 <Download className="w-4 h-4" />
                 Baixar

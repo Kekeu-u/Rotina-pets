@@ -12,11 +12,19 @@ export interface Task {
   pts: number;
 }
 
+export interface TaskNote {
+  taskId: string;
+  note: string;
+  timestamp: string;
+  completedAt?: string;
+}
+
 export interface HistoryItem {
   name: string;
   emoji: string;
   pts: number;
   time: string;
+  note?: string;
 }
 
 export interface Product {
@@ -38,6 +46,7 @@ export interface AppState {
   points: number;
   lastDate: string | null;
   productPreviews: Record<string, string>;
+  taskNotes: Record<string, TaskNote>;
 }
 
 export type Screen = 'login' | 'setup' | 'dashboard';

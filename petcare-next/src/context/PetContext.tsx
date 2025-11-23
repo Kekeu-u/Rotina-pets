@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { AppState, Pet, Screen } from '@/types';
+import { AppState, Pet, Screen, TaskNote } from '@/types';
 import { TASKS } from '@/lib/constants';
 import {
   supabase,
@@ -28,7 +28,9 @@ interface PetContextType {
   user: User | null;
   setScreen: (screen: Screen) => void;
   setPet: (pet: Pet) => void;
-  completeTask: (taskId: string) => void;
+  completeTask: (taskId: string, note?: string) => void;
+  uncompleteTask: (taskId: string) => void;
+  addTaskNote: (taskId: string, note: string) => void;
   doAction: (action: string, pts: number, emoji: string, name: string) => void;
   updateHappiness: (delta: number) => void;
   saveProductPreview: (productId: string, imageData: string) => void;
@@ -48,6 +50,7 @@ const defaultState: AppState = {
   points: 0,
   lastDate: null,
   productPreviews: {},
+  taskNotes: {},
 };
 
 const PetContext = createContext<PetContextType | undefined>(undefined);
@@ -259,20 +262,81 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const completeTask = useCallback((taskId: string) => {
+  const completeTask = useCallback((taskId: string, note?: string) => {
     const task = TASKS.find(t => t.id === taskId);
     if (!task || state.done.includes(taskId)) return;
 
     const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const timestamp = new Date().toISOString();
+
+    setState(prev => {
+      const newTaskNotes = { ...prev.taskNotes };
+      if (note) {
+        newTaskNotes[taskId] = {
+          taskId,
+          note,
+          timestamp,
+          completedAt: now,
+        };
+      }
+
+      return {
+        ...prev,
+        done: [...prev.done, taskId],
+        points: prev.points + task.pts,
+        happiness: Math.min(100, prev.happiness + task.pts * 0.5),
+        history: [...prev.history, { name: task.name, emoji: task.emoji, pts: task.pts, time: now, note }],
+        taskNotes: newTaskNotes,
+      };
+    });
+  }, [state.done]);
+
+  const uncompleteTask = useCallback((taskId: string) => {
+    const task = TASKS.find(t => t.id === taskId);
+    if (!task || !state.done.includes(taskId)) return;
+
+    setState(prev => {
+      // Remove from done list
+      const newDone = prev.done.filter(id => id !== taskId);
+
+      // Remove from history (last occurrence)
+      const historyIndex = [...prev.history].reverse().findIndex(h => h.name === task.name);
+      const newHistory = historyIndex >= 0
+        ? prev.history.filter((_, i) => i !== (prev.history.length - 1 - historyIndex))
+        : prev.history;
+
+      // Remove note
+      const newTaskNotes = { ...prev.taskNotes };
+      delete newTaskNotes[taskId];
+
+      return {
+        ...prev,
+        done: newDone,
+        points: Math.max(0, prev.points - task.pts),
+        happiness: Math.max(0, prev.happiness - task.pts * 0.5),
+        history: newHistory,
+        taskNotes: newTaskNotes,
+      };
+    });
+  }, [state.done]);
+
+  const addTaskNote = useCallback((taskId: string, note: string) => {
+    const timestamp = new Date().toISOString();
+    const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     setState(prev => ({
       ...prev,
-      done: [...prev.done, taskId],
-      points: prev.points + task.pts,
-      happiness: Math.min(100, prev.happiness + task.pts * 0.5),
-      history: [...prev.history, { name: task.name, emoji: task.emoji, pts: task.pts, time: now }],
+      taskNotes: {
+        ...prev.taskNotes,
+        [taskId]: {
+          taskId,
+          note,
+          timestamp,
+          completedAt: prev.done.includes(taskId) ? now : undefined,
+        },
+      },
     }));
-  }, [state.done]);
+  }, []);
 
   const doAction = useCallback((action: string, pts: number, emoji: string, name: string) => {
     const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -328,6 +392,8 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       setScreen,
       setPet,
       completeTask,
+      uncompleteTask,
+      addTaskNote,
       doAction,
       updateHappiness,
       saveProductPreview,

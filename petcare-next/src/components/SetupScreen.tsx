@@ -245,7 +245,7 @@ export default function SetupScreen() {
         <button
           type="submit"
           disabled={!name.trim() || !breed.trim()}
-          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl text-white font-semibold text-lg hover:from-indigo-400 hover:to-purple-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.98] animate-fadeInUp"
+          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl text-white font-semibold text-lg hover:from-indigo-400 hover:to-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] animate-fadeInUp"
           style={{ animationDelay: '500ms' }}
         >
           Começar
