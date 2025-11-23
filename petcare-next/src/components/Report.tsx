@@ -1,13 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePet } from '@/context/PetContext';
 import { TASKS, HAPPINESS_LEVELS } from '@/lib/constants';
-import { Sparkles, TrendingUp, Calendar, FileText, RefreshCw, AlertCircle } from 'lucide-react';
+import { Sparkles, TrendingUp, Calendar, FileText, RefreshCw, AlertCircle, Target, Lightbulb, Activity, Heart } from 'lucide-react';
+
+interface AnalysisData {
+  summary: string;
+  insights: string[];
+  recommendations: string[];
+  healthScore: number;
+  mood: string;
+}
+
+interface ReportResponse {
+  report: string;
+  analysis?: AnalysisData;
+  provider: 'groq' | 'pollinations';
+}
 
 export default function Report() {
   const { state, aiConfigured } = usePet();
   const [report, setReport] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+  const [provider, setProvider] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +59,14 @@ export default function Report() {
         return `${task?.name || 'Tarefa'}: ${n.note}`;
       }).join('; ');
 
+      // Incluir histórico de atividades para análise mais completa
+      const historyData = state.history.map(h => ({
+        name: h.name,
+        pts: h.pts,
+        time: h.time,
+        note: h.note,
+      }));
+
       const res = await fetch('/api/ai/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,20 +79,38 @@ export default function Report() {
           streak: state.streak,
           points: state.points,
           notes: notesContext,
+          history: historyData,
         }),
       });
 
-      const data = await res.json();
+      const data: ReportResponse = await res.json();
+
       if (data.report) {
         setReport(data.report);
+        setAnalysis(data.analysis || null);
+        setProvider(data.provider || null);
       } else {
-        setError(data.error || 'Não foi possível gerar o relatório');
+        setError((data as any).error || 'Não foi possível gerar o relatório');
       }
     } catch (err) {
       setError('Erro ao gerar relatório. Tente novamente.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    if (score >= 40) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
+  const getHealthScoreBg = (score: number) => {
+    if (score >= 80) return 'from-green-500/20 to-green-600/10';
+    if (score >= 60) return 'from-yellow-500/20 to-yellow-600/10';
+    if (score >= 40) return 'from-orange-500/20 to-orange-600/10';
+    return 'from-red-500/20 to-red-600/10';
   };
 
   return (
@@ -153,6 +195,11 @@ export default function Report() {
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400" />
               <span className="text-sm font-medium gradient-text">Análise da IA</span>
+              {provider && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">
+                  {provider === 'groq' ? 'Llama 3.3' : 'Pollinations'}
+                </span>
+              )}
             </div>
             <button
               onClick={generateReport}
@@ -162,7 +209,7 @@ export default function Report() {
               {loading ? (
                 <>
                   <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                  <span>Gerando...</span>
+                  <span>Analisando...</span>
                 </>
               ) : (
                 <>
@@ -180,21 +227,85 @@ export default function Report() {
             </div>
           )}
 
-          {report ? (
+          {/* Structured Analysis (when available from Groq) */}
+          {analysis ? (
+            <div className="space-y-4">
+              {/* Health Score Card */}
+              <div className={`rounded-xl p-4 bg-gradient-to-br ${getHealthScoreBg(analysis.healthScore)}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-indigo-400" />
+                    <span className="font-medium">Bem-estar</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{analysis.mood}</span>
+                    <span className={`text-2xl font-bold ${getHealthScoreColor(analysis.healthScore)}`}>
+                      {analysis.healthScore}
+                    </span>
+                    <span className="text-sm text-[var(--foreground-secondary)]">/100</span>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed">{analysis.summary}</p>
+              </div>
+
+              {/* Insights */}
+              {analysis.insights.length > 0 && (
+                <div className="rounded-xl p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-4 h-4 text-blue-400" />
+                    <span className="font-medium text-sm">Insights</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysis.insights.map((insight, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <span className="text-blue-400 mt-0.5">•</span>
+                        <span className="text-[var(--foreground-secondary)]">{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {analysis.recommendations.length > 0 && (
+                <div className="rounded-xl p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb className="w-4 h-4 text-amber-400" />
+                    <span className="font-medium text-sm">Recomendações</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysis.recommendations.map((rec, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <span className="text-amber-400 mt-0.5">•</span>
+                        <span className="text-[var(--foreground-secondary)]">{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : report ? (
+            /* Simple text report (Pollinations fallback) */
             <div className="prose prose-sm prose-invert max-w-none">
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{report}</p>
             </div>
           ) : !loading && (
-            <p className="text-sm text-[var(--foreground-secondary)] text-center py-4">
-              Clique em "Gerar" para receber uma análise personalizada sobre o dia de {state.pet?.name}
-            </p>
+            <div className="text-center py-6">
+              <Heart className="w-12 h-12 text-indigo-400/30 mx-auto mb-3" />
+              <p className="text-sm text-[var(--foreground-secondary)]">
+                Clique em "Gerar" para receber uma análise personalizada
+              </p>
+              <p className="text-xs text-[var(--foreground-secondary)] mt-1">
+                Análise de {state.pet?.name} com IA
+              </p>
+            </div>
           )}
         </div>
       ) : (
         <div className="glass-card p-4 animate-fadeInUp text-center" style={{ animationDelay: '250ms' }}>
           <Sparkles className="w-8 h-8 text-[var(--foreground-secondary)] mx-auto mb-2" />
           <p className="text-sm text-[var(--foreground-secondary)]">
-            Configure a IA nas configurações para receber análises personalizadas
+            A IA está sempre disponível para gerar análises personalizadas
           </p>
         </div>
       )}
