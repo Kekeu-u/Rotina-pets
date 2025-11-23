@@ -59,7 +59,7 @@ export default function Actions() {
               {action.emoji}
             </span>
             <div className="relative z-10 text-center">
-              <span className="text-xs text-gray-300 block">{action.name}</span>
+              <span className="text-xs text-[var(--foreground-secondary)] block">{action.name}</span>
               <span className="text-xs font-bold text-emerald-400">+{action.pts}</span>
             </div>
           </button>

@@ -103,7 +103,7 @@ export default function ToggleSwitch({
         onClick={onChange}
         className={`${s.track} relative rounded-full p-0.5 transition-all duration-300 ${
           checked
-            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30'
+            ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/25'
             : 'bg-gray-600/50'
         }`}
         aria-label={checked ? 'Desativar' : 'Ativar'}

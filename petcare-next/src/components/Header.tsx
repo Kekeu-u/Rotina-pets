@@ -2,7 +2,7 @@
 
 import { usePet } from '@/context/PetContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Dog } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { DEFAULT_PHOTO } from '@/lib/constants';
 import ToggleSwitch from './ui/ToggleSwitch';
 
@@ -30,21 +30,21 @@ export default function Header({ onSettingsClick, onAvatarClick }: HeaderProps) 
               {hasPhoto ? (
                 <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
               ) : (
-                <Dog className="w-6 h-6 text-gray-400" />
+                <Clock className="w-6 h-6 text-[var(--foreground-secondary)]" />
               )}
             </div>
           </div>
           {aiConfigured && (
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs shadow-lg shadow-purple-500/50">
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-xs shadow-lg shadow-indigo-500/40">
               ✨
             </div>
           )}
           {/* Hover glow effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-indigo-500/20 group-hover:via-purple-500/20 group-hover:to-pink-500/20 transition-all duration-300 blur-md -z-10"></div>
+          <div className="absolute inset-0 rounded-full bg-indigo-500/0 group-hover:bg-indigo-500/15 transition-all duration-300 blur-md -z-10"></div>
         </div>
         <div>
           <h1 className="font-bold text-lg gradient-text">{state.pet?.name || 'Pet'}</h1>
-          <p className="text-sm text-gray-400">{state.pet?.breed || 'Raça'}</p>
+          <p className="text-sm text-[var(--foreground-secondary)]">{state.pet?.breed || 'Raça'}</p>
         </div>
       </div>
 

@@ -97,8 +97,8 @@ export default function TaskList() {
             {/* Status indicator line */}
             <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${
               done ? 'bg-gradient-to-b from-emerald-400 to-emerald-600' :
-              late ? 'bg-gradient-to-b from-red-400 to-red-600' :
-              'bg-gradient-to-b from-indigo-400 to-purple-500'
+              late ? 'bg-gradient-to-b from-red-400 to-red-500' :
+              'bg-gradient-to-b from-indigo-400 to-indigo-600'
             }`}></div>
 
             {/* Checkbox */}
@@ -120,7 +120,7 @@ export default function TaskList() {
                 <span className="text-xl">{task.emoji}</span>
                 <span className="truncate">{task.name}</span>
               </div>
-              <div className={`text-sm ${late ? 'text-red-400' : 'text-gray-400'}`}>
+              <div className={`text-sm ${late ? 'text-red-400' : 'text-[var(--foreground-secondary)]'}`}>
                 {task.time}
                 {late && <span className="ml-2 text-xs">• Atrasado</span>}
               </div>

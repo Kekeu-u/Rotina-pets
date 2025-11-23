@@ -3,32 +3,90 @@
 import { useState, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { DEFAULT_PHOTO } from '@/lib/constants';
-import { Dog, Camera, Trash2, Sparkles, Send } from 'lucide-react';
+import { Clock, Camera, Trash2, Sparkles, Send } from 'lucide-react';
 
 interface AvatarMenuProps {
   onClose: () => void;
 }
 
 export default function AvatarMenu({ onClose }: AvatarMenuProps) {
-  const { state, aiConfigured } = usePet();
+  const { state, aiConfigured, setPet } = usePet();
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasPhoto = state.pet?.photo && state.pet.photo !== DEFAULT_PHOTO;
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Process photo - simplified for now
-      const reader = new FileReader();
-      reader.onload = () => {
-        // Update pet photo in state
-        // You can add photo processing here
+  const optimizeImage = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxSize = 400;
+        let { width, height } = img;
+
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
-      reader.readAsDataURL(file);
+      img.src = dataUrl;
+    });
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !state.pet) return;
+
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      const originalData = await new Promise<string>((resolve, reject) => {
+        reader.onload = (ev) => resolve(ev.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const optimizedData = await optimizeImage(originalData);
+
+      // Save pet with new photo to context and Supabase
+      await setPet({
+        name: state.pet.name,
+        breed: state.pet.breed,
+        photo: optimizedData,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Erro ao enviar foto. Tente novamente.');
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!state.pet) return;
+
+    await setPet({
+      name: state.pet.name,
+      breed: state.pet.breed,
+      photo: DEFAULT_PHOTO,
+    });
   };
 
   const handlePromptSubmit = async () => {
@@ -74,7 +132,7 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
               {hasPhoto ? (
                 <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
               ) : (
-                <Dog className="w-12 h-12 text-gray-400" />
+                <Clock className="w-12 h-12 text-[var(--foreground-secondary)]" />
               )}
             </div>
           </div>
@@ -84,14 +142,25 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
         {/* Options */}
         <div className="flex gap-3 mb-6 relative z-10">
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 glass-button flex items-center justify-center gap-2 py-3 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => !isProcessing && fileInputRef.current?.click()}
+            disabled={isProcessing}
+            className="flex-1 glass-button flex items-center justify-center gap-2 py-3 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
-            <Camera className="w-5 h-5 text-indigo-400" />
-            <span className="text-sm">Enviar Foto</span>
+            {isProcessing ? (
+              <>
+                <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm">Enviando...</span>
+              </>
+            ) : (
+              <>
+                <Camera className="w-5 h-5 text-indigo-400" />
+                <span className="text-sm">Enviar Foto</span>
+              </>
+            )}
           </button>
           {hasPhoto && (
             <button
+              onClick={handleRemovePhoto}
               className="flex-1 glass-button flex items-center justify-center gap-2 py-3 rounded-xl transition-all text-red-400 hover:bg-red-500/10 hover:scale-[1.02] active:scale-[0.98]"
             >
               <Trash2 className="w-5 h-5" />
@@ -109,10 +178,10 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
 
         {/* AI Prompt Section */}
         {aiConfigured && (
-          <div className="border-t border-white/10 pt-4 relative z-10">
+          <div className="border-t border-[var(--foreground)]/10 pt-4 relative z-10">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-sm gradient-text font-medium">
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-indigo-400" />
                 <span>Pergunte à IA</span>
               </div>
             </div>
@@ -130,7 +199,7 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
               <button
                 onClick={handlePromptSubmit}
                 disabled={loading || !prompt.trim()}
-                className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-400 hover:to-purple-400 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95"
+                className="p-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl hover:from-indigo-400 hover:to-indigo-500 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/25 hover:scale-105 active:scale-95"
               >
                 <Send className="w-5 h-5" />
               </button>
@@ -138,8 +207,8 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
 
             {loading && (
               <div className="glass-task p-4">
-                <div className="relative z-10 flex items-center gap-3 text-sm text-gray-400">
-                  <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                <div className="relative z-10 flex items-center gap-3 text-sm text-[var(--foreground-secondary)]">
+                  <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
                   Pensando...
                 </div>
               </div>
@@ -147,14 +216,14 @@ export default function AvatarMenu({ onClose }: AvatarMenuProps) {
 
             {response && (
               <div className="glass-task p-4 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/10 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-indigo-400/5 pointer-events-none"></div>
                 <p className="relative z-10 text-sm">{response}</p>
               </div>
             )}
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-500 mt-4 relative z-10">
+        <p className="text-center text-xs text-[var(--foreground-secondary)] mt-4 relative z-10">
           Toque fora para fechar
         </p>
       </div>
