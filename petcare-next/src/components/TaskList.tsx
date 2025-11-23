@@ -52,7 +52,7 @@ export default function TaskList() {
     <div className="space-y-2 relative">
       {/* AI Reaction Toast */}
       {reaction && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-indigo-900/90 border border-indigo-500 px-4 py-3 rounded-xl shadow-lg animate-pulse max-w-[90%]">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 glass-card px-4 py-3 shadow-lg animate-fadeIn max-w-[90%] border-indigo-500/50">
           <p className="text-sm text-center">
             <span className="text-xl mr-2">{reaction.emoji}</span>
             {reaction.message}
@@ -71,14 +71,14 @@ export default function TaskList() {
             onClick={() => !done && handleTaskClick(task.id)}
             className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
               done
-                ? 'bg-green-900/20 border-green-700/30 opacity-60'
+                ? 'glass border-green-500/30 opacity-60'
                 : late
-                ? 'bg-red-900/20 border-red-700/30 cursor-pointer hover:border-red-600'
-                : 'bg-gray-800/50 border-gray-700 cursor-pointer hover:border-indigo-500'
+                ? 'glass border-red-500/30 cursor-pointer hover:border-red-500/60'
+                : 'glass-card cursor-pointer hover:border-indigo-500/50'
             }`}
           >
             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${
-              done ? 'border-green-500 bg-green-500 text-white' : 'border-gray-600'
+              done ? 'border-green-500 bg-green-500 text-white' : 'border-gray-500'
             }`}>
               {done && '✓'}
             </div>

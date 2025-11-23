@@ -1,7 +1,8 @@
 'use client';
 
 import { usePet } from '@/context/PetContext';
-import { Dog } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
+import { Dog, Sun, Moon } from 'lucide-react';
 import { DEFAULT_PHOTO } from '@/lib/constants';
 
 interface HeaderProps {
@@ -11,17 +12,18 @@ interface HeaderProps {
 
 export default function Header({ onSettingsClick, onAvatarClick }: HeaderProps) {
   const { state, aiConfigured } = usePet();
+  const { isDark, toggleTheme } = useTheme();
 
   const hasPhoto = state.pet?.photo && state.pet.photo !== DEFAULT_PHOTO;
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-gray-900/80 backdrop-blur border-b border-gray-800">
+    <header className="flex items-center justify-between px-4 py-3 glass border-b border-white/10">
       <div className="flex items-center gap-3">
         <div
           onClick={onAvatarClick}
           className="relative cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-indigo-500 overflow-hidden flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full glass border-2 border-indigo-500/50 overflow-hidden flex items-center justify-center">
             {hasPhoto ? (
               <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
             ) : (
@@ -40,12 +42,28 @@ export default function Header({ onSettingsClick, onAvatarClick }: HeaderProps) 
         </div>
       </div>
 
-      <button
-        onClick={onSettingsClick}
-        className="p-2 text-2xl hover:opacity-80 transition-opacity"
-      >
-        ⚙️
-      </button>
+      <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 glass-button rounded-xl hover:scale-105 transition-transform"
+          aria-label={isDark ? 'Modo claro' : 'Modo escuro'}
+        >
+          {isDark ? (
+            <Sun className="w-5 h-5 text-yellow-400" />
+          ) : (
+            <Moon className="w-5 h-5 text-indigo-500" />
+          )}
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={onSettingsClick}
+          className="p-2 text-xl hover:opacity-80 transition-opacity"
+        >
+          ⚙️
+        </button>
+      </div>
     </header>
   );
 }
