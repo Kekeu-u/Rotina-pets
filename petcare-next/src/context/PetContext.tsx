@@ -14,7 +14,8 @@ import {
   getOrCreateDevice,
   getTodayStats,
   upsertTodayStats,
-  getYesterdayStats
+  getYesterdayStats,
+  isSupabaseConfigured
 } from '@/lib/supabase';
 
 interface PetContextType {
@@ -59,6 +60,13 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to auth state changes
   useEffect(() => {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase not configured');
+      setLoaded(true);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
@@ -67,6 +75,9 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       } else {
         setLoaded(true);
       }
+    }).catch((err) => {
+      console.error('Failed to get session:', err);
+      setLoaded(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

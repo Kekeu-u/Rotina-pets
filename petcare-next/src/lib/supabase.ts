@@ -1,12 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create client only if we have valid config
+let supabase: SupabaseClient;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  // Create a dummy client that won't crash but won't work
+  // This allows the app to load and show an error message
+  console.warn('Supabase not configured - missing environment variables');
+  supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
+}
+
+export { supabase };
+
+// Check if Supabase is properly configured
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl !== '');
+}
 
 // Auth functions
 export async function signUp(email: string, password: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -15,6 +35,9 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signIn(email: string, password: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -23,22 +46,35 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
+  if (!isSupabaseConfigured()) {
+    return { error: null };
+  }
   const { error } = await supabase.auth.signOut();
   return { error };
 }
 
 export async function getUser() {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
 
 export async function getSession() {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
   const { data: { session } } = await supabase.auth.getSession();
   return session;
 }
 
 // Device/Pet functions - usando sua schema existente
 export async function getOrCreateDevice(deviceId: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   // Try to get existing device
   const { data: existing } = await supabase
     .from('devices')
@@ -65,6 +101,10 @@ export async function updateDevice(deviceId: string, updates: {
   breed?: string;
   photo_data?: string;
 }) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   const { data, error } = await supabase
     .from('devices')
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -76,6 +116,10 @@ export async function updateDevice(deviceId: string, updates: {
 }
 
 export async function getDevice(deviceId: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   const { data, error } = await supabase
     .from('devices')
     .select('*')
@@ -87,6 +131,10 @@ export async function getDevice(deviceId: string) {
 
 // Stats functions - estatísticas diárias por device
 export async function getTodayStats(deviceId: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabase
@@ -105,6 +153,10 @@ export async function upsertTodayStats(deviceId: string, stats: {
   streak?: number;
   completed_tasks?: string[];
 }) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabase
@@ -124,6 +176,10 @@ export async function upsertTodayStats(deviceId: string, stats: {
 }
 
 export async function getYesterdayStats(deviceId: string) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: { message: 'Supabase não configurado' } };
+  }
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
