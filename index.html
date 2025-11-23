@@ -103,6 +103,7 @@
             <nav class="tabs">
                 <button class="tab active" data-tab="rotina">Rotina</button>
                 <button class="tab" data-tab="acoes">Ações</button>
+                <button class="tab" data-tab="loja">🛒 Loja</button>
                 <button class="tab" data-tab="historico">Histórico</button>
             </nav>
 
@@ -137,6 +138,64 @@
             <div class="tab-content" id="tab-historico">
                 <div class="timeline" id="timeline">
                     <p class="empty">Nenhuma atividade</p>
+                </div>
+            </div>
+
+            <!-- Shop Tab -->
+            <div class="tab-content" id="tab-loja">
+                <div class="shop-container">
+                    <!-- Shop Header -->
+                    <div class="shop-header">
+                        <div class="shop-pet-preview">
+                            <img id="shop-pet-photo" class="shop-pet-img" src="" alt="">
+                            <div class="shop-sparkle">✨</div>
+                        </div>
+                        <div class="shop-header-text">
+                            <h3>Presentes para <span id="shop-pet-name">seu pet</span>!</h3>
+                            <p id="shop-ai-tip">Carregando recomendação...</p>
+                        </div>
+                    </div>
+
+                    <!-- Products -->
+                    <div class="shop-products">
+                        <a href="https://mercadolivre.com.br/sec/1wEe68m" target="_blank" class="product-card" data-product="cacto">
+                            <div class="product-img-wrap">
+                                <img src="https://http2.mlstatic.com/D_NQ_NP_2X_622629-MLU72541779498_102023-F.webp" alt="Cacto Dançante">
+                            </div>
+                            <div class="product-info">
+                                <h4>Cacto Dançante</h4>
+                                <p>Toca música e repete fala!</p>
+                                <span class="product-price">R$ 34,90</span>
+                            </div>
+                            <div class="product-badge">🔥 Popular</div>
+                        </a>
+
+                        <a href="https://mercadolivre.com.br/sec/27jb2Mm" target="_blank" class="product-card" data-product="mordedor">
+                            <div class="product-img-wrap">
+                                <img src="https://http2.mlstatic.com/D_NQ_NP_2X_917941-MLB72567498498_102023-F.webp" alt="Mordedor Escova">
+                            </div>
+                            <div class="product-info">
+                                <h4>Mordedor Escova</h4>
+                                <p>Limpa os dentes brincando!</p>
+                                <span class="product-price">R$ 29,90</span>
+                            </div>
+                            <div class="product-badge">🦷 Saúde</div>
+                        </a>
+
+                        <a href="https://mercadolivre.com.br/sec/2mMKX3A" target="_blank" class="product-card" data-product="corda">
+                            <div class="product-img-wrap">
+                                <img src="https://http2.mlstatic.com/D_NQ_NP_2X_806575-MLB53162729498_012023-F.webp" alt="Kit Cordas">
+                            </div>
+                            <div class="product-info">
+                                <h4>Kit 4 Cordas</h4>
+                                <p>Brinquedo resistente!</p>
+                                <span class="product-price">R$ 39,90</span>
+                            </div>
+                            <div class="product-badge">💪 Forte</div>
+                        </a>
+                    </div>
+
+                    <p class="shop-footer">Comprando aqui você ajuda o PetCare! 💜</p>
                 </div>
             </div>
 

@@ -157,6 +157,33 @@ function update() {
     renderTimeline();
     loadPetThought();
     loadAI();
+    updateShop();
+}
+
+// Shop
+function updateShop() {
+    if (!state.pet) return;
+
+    const shopPhoto = $('#shop-pet-photo');
+    const shopName = $('#shop-pet-name');
+
+    if (shopPhoto) shopPhoto.src = state.pet.photo || DEFAULT_PHOTO;
+    if (shopName) shopName.textContent = state.pet.name;
+}
+
+async function loadShopRecommendation() {
+    if (!window.AI?.isConfigured() || !state.pet) {
+        $('#shop-ai-tip').textContent = 'Brinquedos selecionados para seu pet!';
+        return;
+    }
+
+    try {
+        const prompt = `Você é um especialista em pets. Dê uma recomendação CURTA (máximo 15 palavras) de brinquedos para um ${state.pet.breed || 'cachorro'} chamado ${state.pet.name}. Seja carinhoso e direto. Não use emojis.`;
+        const tip = await AI.request(prompt);
+        $('#shop-ai-tip').textContent = tip || 'Brinquedos perfeitos para deixar seu pet feliz!';
+    } catch {
+        $('#shop-ai-tip').textContent = 'Brinquedos perfeitos para deixar seu pet feliz!';
+    }
 }
 
 function renderTasks() {
@@ -344,6 +371,11 @@ function initEvents() {
             $$('.tab-content').forEach(c => c.classList.remove('active'));
             tab.classList.add('active');
             $(`#tab-${tab.dataset.tab}`).classList.add('active');
+
+            // Load shop recommendation when opening shop tab
+            if (tab.dataset.tab === 'loja') {
+                loadShopRecommendation();
+            }
         };
     });
 

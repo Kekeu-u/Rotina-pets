@@ -412,6 +412,152 @@ body {
 .ai-tip span { font-size: 1rem; }
 .ai-tip p { font-size: 0.8rem; color: var(--muted); line-height: 1.4; margin: 0; }
 
+/* ========== SHOP TAB ========== */
+#tab-loja {
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 16px;
+    margin: -8px;
+    padding: 16px;
+}
+
+.shop-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.shop-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.shop-pet-preview {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.shop-pet-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(236, 72, 153, 0.5);
+}
+
+.shop-sparkle {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 1rem;
+    animation: sparkle 1.5s ease infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(15deg); opacity: 0.8; }
+}
+
+.shop-header-text h3 {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shop-header-text p {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.3;
+}
+
+.shop-products {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.product-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.product-img-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.product-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-info h4 {
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
+.product-info p {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.product-price {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--success);
+}
+
+.product-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 4px;
+}
+
+.shop-footer {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    padding-top: 8px;
+}
+
 /* ========== MODALS ========== */
 .modal {
     position: fixed;
