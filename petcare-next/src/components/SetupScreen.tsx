@@ -144,7 +144,7 @@ export default function SetupScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="h-dvh flex flex-col items-center justify-center p-6 safe-area-inset overflow-auto">
       <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-8">
         PetCare
       </h1>

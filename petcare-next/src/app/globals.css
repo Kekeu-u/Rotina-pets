@@ -21,6 +21,23 @@
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
+/* iPhone safe area support */
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Dynamic viewport height for mobile */
+.h-dvh {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* Glassmorphism base class */
 .glass {
   background: var(--glass-bg);
@@ -104,13 +121,23 @@
   background: rgba(99, 102, 241, 0.5);
 }
 
-/* PWA fixes */
+/* PWA and mobile fixes */
 html, body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   background: var(--background);
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Prevent iOS bounce/rubber band effect */
+body {
+  position: fixed;
+  width: 100%;
+  touch-action: pan-y;
 }
 
 /* Border width for spinner */

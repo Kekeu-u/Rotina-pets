@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#6366f1',
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -29,12 +30,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className="font-sans min-h-screen transition-colors duration-300">
+      <body className="font-sans transition-colors duration-300 overflow-hidden">
         <ThemeProvider>
           <PetProvider>
-            <div className="max-w-md mx-auto min-h-screen relative">
+            <div className="w-full max-w-[430px] mx-auto h-dvh relative overflow-hidden">
               {/* Background gradient */}
-              <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] dark:from-[#0a0a12] dark:via-[#1a1a2e] dark:to-[#0a0a12] -z-10 transition-colors duration-300" />
+              <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] -z-10 transition-colors duration-300" />
               {children}
             </div>
           </PetProvider>
