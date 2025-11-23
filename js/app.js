@@ -155,6 +155,7 @@ function update() {
 
     renderTasks();
     renderTimeline();
+    loadPetThought();
     loadAI();
 }
 
@@ -269,6 +270,56 @@ async function showReaction(taskName, emoji) {
         $('#reaction-text').textContent = `${state.pet.name} adorou! 🐕`;
     }
 }
+
+// Pet Thought Bubble
+let lastThoughtTime = 0;
+async function loadPetThought() {
+    const bubble = $('#pet-thought');
+    const text = $('#thought-text');
+
+    if (!window.AI?.isConfigured() || !state.pet) {
+        bubble.style.display = 'none';
+        return;
+    }
+
+    // Only refresh every 5 minutes
+    const now = Date.now();
+    if (now - lastThoughtTime < 300000 && lastThoughtTime > 0) return;
+
+    bubble.style.display = 'block';
+    bubble.classList.add('loading');
+    text.textContent = '💭';
+
+    try {
+        const hour = new Date().getHours();
+        const pending = TASKS.length - state.done.length;
+        const thought = await AI.getPetThought(
+            state.pet.name,
+            state.pet.breed,
+            state.happiness,
+            hour,
+            pending,
+            state.done.length
+        );
+        text.textContent = thought || '💭';
+        lastThoughtTime = now;
+    } catch {
+        text.textContent = '💭';
+    }
+
+    bubble.classList.remove('loading');
+}
+
+// Click on thought to refresh
+document.addEventListener('DOMContentLoaded', () => {
+    const bubble = document.getElementById('pet-thought');
+    if (bubble) {
+        bubble.onclick = () => {
+            lastThoughtTime = 0;
+            loadPetThought();
+        };
+    }
+});
 
 // Decay
 setInterval(() => {

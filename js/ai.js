@@ -113,6 +113,28 @@ Seja encorajador em 1 frase. Se o streak for alto, parabenize. Se a felicidade e
 Responda apenas em português brasileiro.`;
 
         return await this.request(prompt);
+    },
+
+    // Generate pet thought based on context
+    async getPetThought(petName, petBreed, happiness, hour, pendingTasks, completedTasks) {
+        const timeOfDay = hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
+        const mood = happiness >= 70 ? 'muito feliz' : happiness >= 40 ? 'tranquilo' : 'carente';
+
+        const prompt = `Você é ${petName}, um ${petBreed}. Gere UM pensamento curto (máximo 8 palavras) baseado no contexto:
+- Hora: ${timeOfDay}
+- Humor: ${mood} (${happiness}% felicidade)
+- Tasks feitas: ${completedTasks}
+- Tasks pendentes: ${pendingTasks}
+
+Exemplos de formato:
+- "Hora do passeio?"
+- "Tô com fome..."
+- "Amo meu dono!"
+- "Bora brincar?"
+
+Responda APENAS o pensamento, sem aspas, sem explicação.`;
+
+        return await this.request(prompt);
     }
 };
 
