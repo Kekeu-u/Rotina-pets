@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateImage, isConfigured } from '@/lib/gemini';
+import { generateImage, isConfigured } from '@/lib/pollinations';
 
 export async function POST(request: NextRequest) {
   if (!isConfigured()) {
-    return NextResponse.json({ error: 'API not configured', details: 'GEMINI_API_KEY missing' }, { status: 503 });
+    return NextResponse.json({ error: 'API not configured' }, { status: 503 });
   }
 
   try {
     const { petName, petBreed, productName, productDescription } = await request.json();
 
-    const prompt = `Generate a cute, photorealistic image of a ${petBreed} dog named ${petName} happily playing with a ${productName} (${productDescription}). The dog should look happy and engaged with the toy. Bright, cheerful lighting. High quality pet photography style.`;
+    // Prompt otimizado para Pollinations/Flux
+    const prompt = `Cute photorealistic ${petBreed} dog named ${petName} happily playing with ${productName}, ${productDescription}. Happy dog, bright cheerful lighting, high quality pet photography, adorable, joyful expression`;
 
-    console.log('Generating image with prompt:', prompt.substring(0, 100) + '...');
+    console.log('Generating image with Pollinations, prompt:', prompt.substring(0, 100) + '...');
 
-    const imageData = await generateImage(prompt);
+    const imageData = await generateImage(prompt, {
+      width: 512,
+      height: 512,
+      model: 'flux-realism'
+    });
 
     if (!imageData) {
       return NextResponse.json({ error: 'No image returned', details: 'API returned no image data' }, { status: 500 });
     }
 
-    console.log('Image generated successfully');
+    console.log('Image generated successfully with Pollinations');
     return NextResponse.json({ image: imageData });
   } catch (error: any) {
     console.error('Image generation error:', error);

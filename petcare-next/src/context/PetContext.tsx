@@ -8,6 +8,7 @@ import {
   supabase,
   signUp,
   signIn,
+  signInWithGoogle,
   signOut,
   getDevice,
   updateDevice,
@@ -33,6 +34,7 @@ interface PetContextType {
   saveProductPreview: (productId: string, imageData: string) => void;
   handleSignUp: (email: string, password: string) => Promise<{ error: any }>;
   handleSignIn: (email: string, password: string) => Promise<{ error: any }>;
+  handleGoogleSignIn: () => Promise<{ error: any }>;
   logout: () => void;
   reset: () => void;
 }
@@ -221,6 +223,13 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     return { error };
   }, []);
 
+  const handleGoogleSignIn = useCallback(async () => {
+    const { error } = await signInWithGoogle();
+    // O redirect é automático, então não precisamos fazer nada aqui
+    // O onAuthStateChange vai capturar quando o usuário voltar
+    return { error };
+  }, []);
+
   const logout = useCallback(async () => {
     await signOut();
     setUser(null);
@@ -324,6 +333,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       saveProductPreview,
       handleSignUp,
       handleSignIn,
+      handleGoogleSignIn,
       logout,
       reset,
     }}>
