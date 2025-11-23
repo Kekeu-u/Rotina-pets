@@ -37,25 +37,103 @@ export async function getSession() {
   return session;
 }
 
-// Database functions
-export async function savePetData(userId: string, petData: any) {
+// Device/Pet functions - usando sua schema existente
+export async function getOrCreateDevice(deviceId: string) {
+  // Try to get existing device
+  const { data: existing } = await supabase
+    .from('devices')
+    .select('*')
+    .eq('device_id', deviceId)
+    .single();
+
+  if (existing) {
+    return { data: existing, error: null };
+  }
+
+  // Create new device
   const { data, error } = await supabase
-    .from('pets')
-    .upsert({
-      user_id: userId,
-      data: petData,
-      updated_at: new Date().toISOString(),
-    }, {
-      onConflict: 'user_id'
-    });
+    .from('devices')
+    .insert({ device_id: deviceId, name: '' })
+    .select()
+    .single();
+
   return { data, error };
 }
 
-export async function getPetData(userId: string) {
+export async function updateDevice(deviceId: string, updates: {
+  name?: string;
+  breed?: string;
+  photo_data?: string;
+}) {
   const { data, error } = await supabase
-    .from('pets')
-    .select('data')
-    .eq('user_id', userId)
+    .from('devices')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('device_id', deviceId)
+    .select()
     .single();
-  return { data: data?.data, error };
+
+  return { data, error };
+}
+
+export async function getDevice(deviceId: string) {
+  const { data, error } = await supabase
+    .from('devices')
+    .select('*')
+    .eq('device_id', deviceId)
+    .single();
+
+  return { data, error };
+}
+
+// Stats functions - estatísticas diárias por device
+export async function getTodayStats(deviceId: string) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('device_stats')
+    .select('*')
+    .eq('device_id', deviceId)
+    .eq('date', today)
+    .single();
+
+  return { data, error };
+}
+
+export async function upsertTodayStats(deviceId: string, stats: {
+  happiness?: number;
+  points?: number;
+  streak?: number;
+  completed_tasks?: string[];
+}) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('device_stats')
+    .upsert({
+      device_id: deviceId,
+      date: today,
+      ...stats,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'device_id,date'
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+export async function getYesterdayStats(deviceId: string) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('device_stats')
+    .select('*')
+    .eq('device_id', deviceId)
+    .eq('date', yesterdayStr)
+    .single();
+
+  return { data, error };
 }

@@ -3,8 +3,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { AppState, Pet, Screen } from '@/types';
-import { STORAGE_KEY, TASKS } from '@/lib/constants';
-import { supabase, savePetData, getPetData, signUp, signIn, signOut } from '@/lib/supabase';
+import { TASKS } from '@/lib/constants';
+import {
+  supabase,
+  signUp,
+  signIn,
+  signOut,
+  getDevice,
+  updateDevice,
+  getOrCreateDevice,
+  getTodayStats,
+  upsertTodayStats,
+  getYesterdayStats
+} from '@/lib/supabase';
 
 interface PetContextType {
   loaded: boolean;
@@ -48,24 +59,22 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to auth state changes
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
-        loadUserData(session.user.id);
+        loadUserData(session.user.email || session.user.id);
       } else {
         setLoaded(true);
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
-        await loadUserData(session.user.id);
+        await loadUserData(session.user.email || session.user.id);
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -77,41 +86,52 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load user data from Supabase
-  const loadUserData = async (userId: string) => {
+  // Load user data from Supabase (devices + device_stats)
+  const loadUserData = async (deviceId: string) => {
     try {
-      const { data, error } = await getPetData(userId);
+      // Get or create device
+      await getOrCreateDevice(deviceId);
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading pet data:', error);
+      // Get device info (pet data)
+      const { data: deviceData } = await getDevice(deviceId);
+
+      // Get today's stats
+      const { data: todayStats } = await getTodayStats(deviceId);
+
+      // Get yesterday's stats for streak calculation
+      const { data: yesterdayStats } = await getYesterdayStats(deviceId);
+
+      let loadedState = { ...defaultState };
+
+      // Load pet from device
+      if (deviceData && deviceData.name) {
+        loadedState.pet = {
+          name: deviceData.name,
+          breed: deviceData.breed || '',
+          photo: deviceData.photo_data || '',
+        };
       }
 
-      if (data) {
-        const today = new Date().toISOString().split('T')[0];
-        let loadedState = { ...defaultState, ...data };
-
-        // Check if new day - reset daily tasks
-        if (loadedState.lastDate !== today) {
-          const newStreak = loadedState.done.length === TASKS.length && loadedState.lastDate
-            ? loadedState.streak + 1
-            : loadedState.lastDate ? 0 : loadedState.streak;
-
-          loadedState = {
-            ...loadedState,
-            done: [],
-            history: [],
-            streak: newStreak,
-            lastDate: today,
-          };
-        }
-
-        setState(loadedState);
-        setScreen(loadedState.pet ? 'dashboard' : 'setup');
+      // Load today's stats
+      if (todayStats) {
+        loadedState.happiness = todayStats.happiness || 50;
+        loadedState.points = todayStats.points || 0;
+        loadedState.streak = todayStats.streak || 0;
+        loadedState.done = todayStats.completed_tasks || [];
+        loadedState.lastDate = todayStats.date;
       } else {
-        // New user, no data yet
-        setState(defaultState);
-        setScreen('setup');
+        // New day - calculate streak from yesterday
+        if (yesterdayStats) {
+          const yesterdayTasks = yesterdayStats.completed_tasks || [];
+          const completedAllYesterday = yesterdayTasks.length === TASKS.length;
+          loadedState.streak = completedAllYesterday ? (yesterdayStats.streak || 0) + 1 : 0;
+          loadedState.points = yesterdayStats.points || 0; // Carry over points
+        }
+        loadedState.lastDate = new Date().toISOString().split('T')[0];
       }
+
+      setState(loadedState);
+      setScreen(loadedState.pet ? 'dashboard' : 'setup');
     } catch (err) {
       console.error('Failed to load user data:', err);
       setState(defaultState);
@@ -124,16 +144,23 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
   // Save state to Supabase when it changes
   useEffect(() => {
     if (loaded && isAuthenticated && user) {
-      // Debounce saves to avoid too many requests
+      const deviceId = user.email || user.id;
+
       const timeout = setTimeout(() => {
-        savePetData(user.id, state).catch(err => {
-          console.error('Failed to save pet data:', err);
+        // Save stats
+        upsertTodayStats(deviceId, {
+          happiness: state.happiness,
+          points: state.points,
+          streak: state.streak,
+          completed_tasks: state.done,
+        }).catch(err => {
+          console.error('Failed to save stats:', err);
         });
       }, 1000);
 
       return () => clearTimeout(timeout);
     }
-  }, [state, loaded, isAuthenticated, user]);
+  }, [state.happiness, state.points, state.streak, state.done, loaded, isAuthenticated, user]);
 
   // Check AI configuration
   useEffect(() => {
@@ -161,7 +188,6 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await signUp(email, password);
 
     if (!error && data.user) {
-      // Auto-login after signup if email confirmation is disabled
       if (data.session) {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -178,7 +204,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     if (!error && data.user) {
       setUser(data.user);
       setIsAuthenticated(true);
-      await loadUserData(data.user.id);
+      await loadUserData(data.user.email || data.user.id);
     }
 
     return { error };
@@ -192,7 +218,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     setScreen('login');
   }, []);
 
-  const setPet = useCallback((pet: Pet) => {
+  const setPet = useCallback(async (pet: Pet) => {
     const today = new Date().toISOString().split('T')[0];
     setState(prev => ({
       ...prev,
@@ -201,7 +227,17 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       happiness: 50,
     }));
     setScreen('dashboard');
-  }, []);
+
+    // Save pet to devices table
+    if (user) {
+      const deviceId = user.email || user.id;
+      await updateDevice(deviceId, {
+        name: pet.name,
+        breed: pet.breed,
+        photo_data: pet.photo,
+      });
+    }
+  }, [user]);
 
   const completeTask = useCallback((taskId: string) => {
     const task = TASKS.find(t => t.id === taskId);
@@ -248,7 +284,14 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(async () => {
     if (user) {
-      await savePetData(user.id, defaultState);
+      const deviceId = user.email || user.id;
+      await updateDevice(deviceId, { name: '', breed: '', photo_data: '' });
+      await upsertTodayStats(deviceId, {
+        happiness: 50,
+        points: 0,
+        streak: 0,
+        completed_tasks: [],
+      });
     }
     setState(defaultState);
     setScreen('setup');
