@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import anime from 'animejs';
+import { animate, utils, JSAnimation } from 'animejs';
+
+const { random, stagger } = utils;
 
 export function useAnime() {
-  const animationRef = useRef<anime.AnimeInstance | null>(null);
+  const animationRef = useRef<JSAnimation | null>(null);
 
   // Celebracao de pontos flutuando
   const celebratePoints = useCallback((element: HTMLElement, points: number) => {
@@ -13,14 +15,13 @@ export function useAnime() {
     pointsEl.textContent = `+${points}`;
     element.appendChild(pointsEl);
 
-    anime({
-      targets: pointsEl,
+    animate(pointsEl, {
       translateY: [-20, -80],
       opacity: [1, 0],
       scale: [1, 1.5],
       duration: 1000,
-      easing: 'easeOutExpo',
-      complete: () => pointsEl.remove(),
+      ease: 'outExpo',
+      onComplete: () => pointsEl.remove(),
     });
   }, []);
 
@@ -36,53 +37,49 @@ export function useAnime() {
       confettiEl.style.top = '50%';
       container.appendChild(confettiEl);
 
-      anime({
-        targets: confettiEl,
-        translateX: anime.random(-150, 150),
-        translateY: anime.random(-150, 100),
-        rotate: anime.random(-360, 360),
+      animate(confettiEl, {
+        translateX: random(-150, 150),
+        translateY: random(-150, 100),
+        rotate: random(-360, 360),
         scale: [1, 0],
         opacity: [1, 0],
-        duration: anime.random(800, 1200),
-        easing: 'easeOutExpo',
-        complete: () => confettiEl.remove(),
+        duration: random(800, 1200),
+        ease: 'outExpo',
+        onComplete: () => confettiEl.remove(),
       });
     }
   }, []);
 
   // Shake effect for errors
   const shake = useCallback((element: HTMLElement) => {
-    anime({
-      targets: element,
+    animate(element, {
       translateX: [0, -10, 10, -10, 10, 0],
       duration: 500,
-      easing: 'easeInOutSine',
+      ease: 'inOutSine',
     });
   }, []);
 
   // Pulse glow effect
   const pulseGlow = useCallback((element: HTMLElement) => {
-    anime({
-      targets: element,
+    animate(element, {
       boxShadow: [
         '0 0 0 0 rgba(99, 102, 241, 0.4)',
         '0 0 0 20px rgba(99, 102, 241, 0)',
       ],
       duration: 600,
-      easing: 'easeOutSine',
+      ease: 'outSine',
     });
   }, []);
 
   // Counter animation
   const animateCounter = useCallback((element: HTMLElement, from: number, to: number, duration = 1000) => {
     const obj = { value: from };
-    anime({
-      targets: obj,
+    animate(obj, {
       value: to,
-      round: 1,
+      modifier: (v) => Math.round(v),
       duration,
-      easing: 'easeOutExpo',
-      update: () => {
+      ease: 'outExpo',
+      onUpdate: () => {
         element.textContent = String(obj.value);
       },
     });
@@ -90,34 +87,31 @@ export function useAnime() {
 
   // Stagger reveal animation
   const staggerReveal = useCallback((elements: HTMLElement[] | NodeListOf<Element>, delay = 50) => {
-    anime({
-      targets: elements,
+    animate(elements, {
       opacity: [0, 1],
       translateY: [20, 0],
-      delay: anime.stagger(delay),
+      delay: stagger(delay),
       duration: 600,
-      easing: 'easeOutExpo',
+      ease: 'outExpo',
     });
   }, []);
 
   // Bounce effect
   const bounce = useCallback((element: HTMLElement) => {
-    anime({
-      targets: element,
+    animate(element, {
       scale: [1, 1.2, 1],
       duration: 400,
-      easing: 'easeOutElastic(1, .5)',
+      ease: 'outElastic(1, .5)',
     });
   }, []);
 
   // Success checkmark animation
   const successCheck = useCallback((element: HTMLElement) => {
-    anime({
-      targets: element,
+    animate(element, {
       scale: [0, 1.2, 1],
       rotate: [0, 360],
       duration: 600,
-      easing: 'easeOutElastic(1, .6)',
+      ease: 'outElastic(1, .6)',
     });
   }, []);
 
