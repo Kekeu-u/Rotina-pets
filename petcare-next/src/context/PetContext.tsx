@@ -245,7 +245,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       await updateDevice(deviceId, {
         name: pet.name,
         breed: pet.breed,
-        photo_data: pet.photo,
+        photo_data: pet.photo ?? undefined,
       });
     }
   }, [user]);
