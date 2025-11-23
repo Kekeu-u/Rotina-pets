@@ -19,14 +19,34 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [onComplete]);
 
   return (
-    <div className={`fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] flex items-center justify-center z-50 transition-opacity duration-500 ${hiding ? 'opacity-0' : 'opacity-100'}`}>
-      <div className="text-center animate-fadeInUp">
-        <div className="text-6xl mb-4 animate-bounce">🐕</div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+    <div className={`fixed inset-0 bg-[var(--background)] flex items-center justify-center z-50 transition-opacity duration-500 ${hiding ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Animated gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse"></div>
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '500ms' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1000ms' }}></div>
+      </div>
+
+      <div className="text-center animate-fadeInUp relative z-10">
+        {/* Logo with liquid glass effect */}
+        <div className="relative inline-block mb-6">
+          <div className="liquid-avatar-ring">
+            <div className="w-24 h-24 rounded-full bg-[var(--background)] flex items-center justify-center">
+              <span className="text-5xl">🐕</span>
+            </div>
+          </div>
+        </div>
+
+        <h1 className="text-4xl font-bold gradient-text mb-2">
           PetCare
         </h1>
         <p className="text-gray-400 mb-8">Rotina do seu pet</p>
-        <div className="w-10 h-10 mx-auto border-3 border-gray-700 border-t-indigo-500 rounded-full animate-spin" />
+
+        {/* Liquid glass spinner */}
+        <div className="relative w-12 h-12 mx-auto">
+          <div className="absolute inset-0 rounded-full border-3 border-gray-700/50"></div>
+          <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"></div>
+        </div>
       </div>
     </div>
   );

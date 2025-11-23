@@ -33,8 +33,17 @@ export default function RootLayout({
       <body className="font-sans transition-colors duration-300">
         <ThemeProvider>
           <PetProvider>
-            {/* Background gradient */}
-            <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a12] via-[#1a1a2e] to-[#0a0a12] -z-10 transition-colors duration-300" />
+            {/* Animated gradient background */}
+            <div className="fixed inset-0 -z-10 overflow-hidden">
+              {/* Base gradient */}
+              <div className="absolute inset-0 bg-[var(--background)] transition-colors duration-300" />
+
+              {/* Animated gradient orbs */}
+              <div className="absolute top-0 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] animate-float-slow" />
+              <div className="absolute bottom-0 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] animate-float-slow-reverse" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-[150px] animate-pulse-slow" />
+            </div>
+
             {/* Main container */}
             <div className="w-full max-w-[430px] mx-auto min-h-dvh relative">
               {children}

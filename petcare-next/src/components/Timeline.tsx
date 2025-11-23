@@ -7,23 +7,34 @@ export default function Timeline() {
 
   if (state.history.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        Nenhuma atividade
+      <div className="glass-card p-8 text-center animate-fadeInUp">
+        <div className="text-4xl mb-3">📋</div>
+        <p className="text-gray-400">Nenhuma atividade ainda</p>
+        <p className="text-sm text-gray-500 mt-1">Complete tarefas para ver o histórico</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {[...state.history].reverse().slice(0, 10).map((item, index) => (
         <div
           key={index}
-          className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-xl"
+          style={{ animationDelay: `${index * 50}ms` }}
+          className="glass-task flex items-center gap-3 p-4 animate-fadeInUp"
         >
-          <span className="text-sm text-gray-400 w-12">{item.time}</span>
-          <span className="text-xl">{item.emoji}</span>
-          <span className="flex-1 text-sm">{item.name}</span>
-          <span className="text-sm text-green-400 font-medium">+{item.pts}</span>
+          {/* Time badge */}
+          <span className="text-xs text-gray-400 font-mono px-2 py-1 rounded-full bg-white/5 relative z-10">
+            {item.time}
+          </span>
+          {/* Emoji with glow */}
+          <span className="text-2xl relative z-10">{item.emoji}</span>
+          {/* Activity name */}
+          <span className="flex-1 text-sm relative z-10">{item.name}</span>
+          {/* Points badge */}
+          <span className="text-sm font-bold text-emerald-400 px-2 py-1 rounded-full bg-emerald-500/10 relative z-10">
+            +{item.pts}
+          </span>
         </div>
       ))}
     </div>

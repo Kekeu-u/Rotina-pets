@@ -154,34 +154,40 @@ export default function SetupScreen() {
 
   return (
     <div className="h-dvh flex flex-col items-center justify-center p-6 safe-area-inset overflow-auto">
-      <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-8">
+      {/* Logo with gradient */}
+      <h1 className="text-4xl font-bold gradient-text mb-2 animate-fadeInUp">
         PetCare
       </h1>
+      <p className="text-gray-400 mb-8 animate-fadeInUp" style={{ animationDelay: '100ms' }}>
+        Configure seu companheiro
+      </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
-        {/* Avatar Upload */}
-        <div className="relative w-32 h-32 mx-auto">
+        {/* Avatar Upload with Liquid Ring */}
+        <div className="relative w-32 h-32 mx-auto animate-fadeInUp" style={{ animationDelay: '200ms' }}>
           <div
             onClick={() => !isProcessing && fileInputRef.current?.click()}
-            className={`w-full h-full rounded-full glass-card border-2 ${
-              photo ? 'border-green-500/50' : 'border-dashed border-gray-500'
-            } flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-all overflow-hidden ${
+            className={`liquid-avatar-ring cursor-pointer transition-all hover:scale-105 active:scale-95 ${
               isProcessing ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
-            {photo ? (
-              <img src={photo} alt="Pet" className="w-full h-full object-cover" />
-            ) : (
-              <>
-                <Camera className="w-8 h-8 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-400">Adicionar foto</span>
-              </>
-            )}
+            <div className={`w-full h-full rounded-full bg-[var(--background)] flex flex-col items-center justify-center overflow-hidden ${
+              !photo ? 'border-2 border-dashed border-gray-600' : ''
+            }`}>
+              {photo ? (
+                <img src={photo} alt="Pet" className="w-full h-full object-cover" />
+              ) : (
+                <>
+                  <Camera className="w-8 h-8 text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-400">Adicionar foto</span>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Success indicator */}
+          {/* Success indicator with glow */}
           {photo && !isProcessing && (
-            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/50">
               <Check className="w-5 h-5 text-white" />
             </div>
           )}
@@ -189,14 +195,16 @@ export default function SetupScreen() {
 
         {/* Analysis result */}
         {analysisResult && (
-          <p className="text-center text-sm text-indigo-400 animate-fadeIn">
-            ✨ {analysisResult}
-          </p>
+          <div className="glass-card p-3 text-center animate-fadeInUp">
+            <p className="text-sm gradient-text relative z-10">
+              ✨ {analysisResult}
+            </p>
+          </div>
         )}
 
         {/* Upload success message */}
         {uploadSuccess && !analysisResult && (
-          <p className="text-center text-sm text-green-400 animate-fadeIn">
+          <p className="text-center text-sm text-emerald-400 animate-fadeInUp">
             ✓ Foto carregada com sucesso!
           </p>
         )}
@@ -210,48 +218,59 @@ export default function SetupScreen() {
           className="hidden"
         />
 
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nome do pet"
-          className="w-full px-4 py-4 glass-card text-lg placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
-          required
-        />
+        {/* Inputs with Liquid Glass */}
+        <div className="animate-fadeInUp" style={{ animationDelay: '300ms' }}>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome do pet"
+            className="w-full px-5 py-4 glass-input text-lg placeholder-gray-500 text-center"
+            required
+          />
+        </div>
 
-        <input
-          type="text"
-          value={breed}
-          onChange={(e) => setBreed(e.target.value)}
-          placeholder="Raça"
-          className="w-full px-4 py-3 glass-card placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
-          required
-        />
+        <div className="animate-fadeInUp" style={{ animationDelay: '400ms' }}>
+          <input
+            type="text"
+            value={breed}
+            onChange={(e) => setBreed(e.target.value)}
+            placeholder="Raça"
+            className="w-full px-5 py-3.5 glass-input placeholder-gray-500 text-center"
+            required
+          />
+        </div>
 
+        {/* Submit button with gradient and glow */}
         <button
           type="submit"
           disabled={!name.trim() || !breed.trim()}
-          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl text-white font-semibold text-lg hover:from-indigo-400 hover:to-purple-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.98] animate-fadeInUp"
+          style={{ animationDelay: '500ms' }}
         >
           Começar
         </button>
       </form>
 
-      {/* Processing Modal */}
+      {/* Processing Modal - Liquid Glass */}
       {isProcessing && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-          <div className="glass-card p-6 max-w-xs w-full mx-4 animate-fadeIn">
-            <h3 className="text-lg font-semibold text-center mb-6">Processando foto...</h3>
+        <div className="fixed inset-0 glass-backdrop flex items-center justify-center z-[100]">
+          <div className="glass-card p-6 max-w-xs w-full mx-4 animate-fadeInUp">
+            <h3 className="text-lg font-semibold text-center mb-6 gradient-text relative z-10">Processando foto...</h3>
 
-            <div className="space-y-4">
-              {processingSteps.map((step) => (
-                <div key={step.id} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+            <div className="space-y-4 relative z-10">
+              {processingSteps.map((step, index) => (
+                <div
+                  key={step.id}
+                  className="flex items-center gap-3"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                     step.status === 'done'
-                      ? 'bg-green-500'
+                      ? 'bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30'
                       : step.status === 'active'
-                        ? 'bg-indigo-500'
-                        : 'bg-gray-700'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30'
+                        : 'bg-gray-700/50'
                   }`}>
                     {step.status === 'done' ? (
                       <Check className="w-5 h-5 text-white" />
@@ -261,9 +280,9 @@ export default function SetupScreen() {
                       <div className="w-2 h-2 bg-gray-500 rounded-full" />
                     )}
                   </div>
-                  <span className={`text-sm font-medium ${
+                  <span className={`text-sm font-medium transition-colors ${
                     step.status === 'done'
-                      ? 'text-green-400'
+                      ? 'text-emerald-400'
                       : step.status === 'active'
                         ? 'text-white'
                         : 'text-gray-500'
