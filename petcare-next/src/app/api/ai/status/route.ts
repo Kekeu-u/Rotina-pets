@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server';
-import { isConfigured } from '@/lib/pollinations';
+import { isConfigured as isPollinationsConfigured } from '@/lib/pollinations';
+import { isConfigured as isGroqConfigured } from '@/lib/groq';
 
 export async function GET() {
-  // Pollinations não precisa de API key, sempre está disponível
-  return NextResponse.json({ configured: isConfigured() });
+  const groqAvailable = isGroqConfigured();
+  const pollinationsAvailable = isPollinationsConfigured();
+
+  // Pelo menos uma API deve estar disponível
+  const configured = groqAvailable || pollinationsAvailable;
+
+  return NextResponse.json({
+    configured,
+    providers: {
+      groq: groqAvailable,
+      pollinations: pollinationsAvailable,
+    },
+    // Provider principal que será usado
+    primaryProvider: groqAvailable ? 'groq' : 'pollinations',
+  });
 }

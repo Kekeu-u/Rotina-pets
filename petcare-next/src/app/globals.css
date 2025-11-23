@@ -111,8 +111,8 @@
 .glass {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
   box-shadow: var(--liquid-glass-shadow);
   border: 1px solid transparent;
   background-clip: padding-box;
@@ -136,8 +136,8 @@
 .glass-card {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
   box-shadow:
     var(--liquid-glass-shadow),
     0 0 40px -10px var(--liquid-glass-glow);
@@ -177,8 +177,8 @@
 .glass-button {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
   box-shadow: var(--liquid-glass-shadow);
   border: 1px solid transparent;
   border-radius: 0.875rem;
@@ -225,8 +225,8 @@
 .glass-input {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.875rem;
   transition: all 0.3s ease;
@@ -242,8 +242,8 @@
 .glass-pill {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-radius: 9999px;
   border: 1px solid transparent;
   transition: all 0.3s ease;
@@ -274,9 +274,9 @@
 
 /* Liquid Glass Modal Backdrop */
 .glass-backdrop {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Liquid Avatar Ring - Clean rotating gradient */
@@ -305,8 +305,8 @@
 .glass-task {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 1rem;
   border: 1px solid transparent;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -340,8 +340,8 @@
 .glass-action {
   position: relative;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 1.25rem;
   border: 1px solid transparent;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -803,7 +803,7 @@ body {
   height: 28px;
   border-radius: 9999px;
   background: var(--liquid-glass-bg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
