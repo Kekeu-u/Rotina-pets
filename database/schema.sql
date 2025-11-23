@@ -1,138 +1,70 @@
 -- ================================================
--- PetCare Database Schema for Supabase
--- Run this in Supabase SQL Editor
+-- PetCare Database Schema (Modo Híbrido - Sem Auth)
+-- Execute no Supabase SQL Editor
 -- ================================================
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ================================================
--- PETS TABLE
--- ================================================
-CREATE TABLE IF NOT EXISTS pets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+-- Tabela de dispositivos/pets (cada dispositivo = um pet)
+CREATE TABLE IF NOT EXISTS devices (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    device_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     breed TEXT,
-    photo_url TEXT,
+    photo_data TEXT,  -- Armazena base64 da foto (ou null)
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Index for faster user queries
-CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets(user_id);
-
--- ================================================
--- DAILY STATS TABLE (aggregated daily data)
--- ================================================
-CREATE TABLE IF NOT EXISTS daily_stats (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-    date DATE NOT NULL DEFAULT CURRENT_DATE,
-    happiness INTEGER DEFAULT 50 CHECK (happiness >= 0 AND happiness <= 100),
-    completed_tasks TEXT[] DEFAULT '{}',
-    total_points INTEGER DEFAULT 0,
+-- Tabela de estatísticas diárias por dispositivo
+CREATE TABLE IF NOT EXISTS device_stats (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    device_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    happiness INTEGER DEFAULT 50,
+    points INTEGER DEFAULT 0,
+    streak INTEGER DEFAULT 0,
+    completed_tasks JSONB DEFAULT '[]',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(pet_id, date)
+    UNIQUE(device_id, date)
 );
 
-CREATE INDEX IF NOT EXISTS idx_daily_stats_pet_date ON daily_stats(pet_id, date);
-
--- ================================================
--- ACTIVITIES TABLE (history of actions)
--- ================================================
-CREATE TABLE IF NOT EXISTS activities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    emoji TEXT,
-    points INTEGER DEFAULT 0,
-    activity_type TEXT CHECK (activity_type IN ('task', 'action')),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_activities_pet_created ON activities(pet_id, created_at DESC);
-
--- ================================================
--- STREAKS TABLE
--- ================================================
-CREATE TABLE IF NOT EXISTS streaks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE UNIQUE,
-    current_streak INTEGER DEFAULT 0,
-    longest_streak INTEGER DEFAULT 0,
-    last_completed_date DATE,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_devices_device_id ON devices(device_id);
+CREATE INDEX IF NOT EXISTS idx_device_stats_device_id ON device_stats(device_id);
+CREATE INDEX IF NOT EXISTS idx_device_stats_date ON device_stats(date);
 
 -- ================================================
 -- ROW LEVEL SECURITY (RLS)
--- Users can only access their own data
+-- Permite acesso público com anon key
 -- ================================================
 
--- Enable RLS on all tables
-ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_stats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE streaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_stats ENABLE ROW LEVEL SECURITY;
 
--- Pets: users can only CRUD their own pets
-CREATE POLICY "Users can view own pets" ON pets
-    FOR SELECT USING (auth.uid() = user_id);
+-- Políticas para devices
+CREATE POLICY "Allow public read devices" ON devices
+    FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert own pets" ON pets
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow public insert devices" ON devices
+    FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can update own pets" ON pets
-    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Allow public update devices" ON devices
+    FOR UPDATE USING (true);
 
-CREATE POLICY "Users can delete own pets" ON pets
-    FOR DELETE USING (auth.uid() = user_id);
+-- Políticas para device_stats
+CREATE POLICY "Allow public read device_stats" ON device_stats
+    FOR SELECT USING (true);
 
--- Daily Stats: users can access stats of their pets
-CREATE POLICY "Users can view own pet stats" ON daily_stats
-    FOR SELECT USING (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
+CREATE POLICY "Allow public insert device_stats" ON device_stats
+    FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can insert own pet stats" ON daily_stats
-    FOR INSERT WITH CHECK (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
-
-CREATE POLICY "Users can update own pet stats" ON daily_stats
-    FOR UPDATE USING (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
-
--- Activities: users can access activities of their pets
-CREATE POLICY "Users can view own pet activities" ON activities
-    FOR SELECT USING (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
-
-CREATE POLICY "Users can insert own pet activities" ON activities
-    FOR INSERT WITH CHECK (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
-
--- Streaks: users can access streaks of their pets
-CREATE POLICY "Users can view own pet streaks" ON streaks
-    FOR SELECT USING (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
-
-CREATE POLICY "Users can upsert own pet streaks" ON streaks
-    FOR ALL USING (
-        pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
-    );
+CREATE POLICY "Allow public update device_stats" ON device_stats
+    FOR UPDATE USING (true);
 
 -- ================================================
--- FUNCTIONS
+-- TRIGGER para updated_at automático
 -- ================================================
 
--- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -141,22 +73,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers for updated_at
-CREATE TRIGGER pets_updated_at
-    BEFORE UPDATE ON pets
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DROP TRIGGER IF EXISTS devices_updated_at ON devices;
+CREATE TRIGGER devices_updated_at
+    BEFORE UPDATE ON devices
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER daily_stats_updated_at
-    BEFORE UPDATE ON daily_stats
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER streaks_updated_at
-    BEFORE UPDATE ON streaks
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ================================================
--- STORAGE BUCKET FOR PET PHOTOS
--- Run this separately or in Supabase Dashboard
--- ================================================
--- INSERT INTO storage.buckets (id, name, public)
--- VALUES ('pet-photos', 'pet-photos', true);
+DROP TRIGGER IF EXISTS device_stats_updated_at ON device_stats;
+CREATE TRIGGER device_stats_updated_at
+    BEFORE UPDATE ON device_stats
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at();

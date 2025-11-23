@@ -1,250 +1,161 @@
 /**
- * PetCare - Supabase Client
- * Database and Auth integration
+ * PetCare - Supabase Client (Modo Híbrido)
+ * Sync automático sem login
  */
 
-// Supabase Config - Replace with your project details
 const SUPABASE_URL = 'https://ayddobtosltlfnaodhgq.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // Get from Supabase Dashboard > Settings > API
+const SUPABASE_ANON_KEY = 'sb_publishable_x0tHADtpPepVGXjy819jfw_MyZ-TsLy';
 
-// Simple Supabase Client (no SDK needed)
 const Supabase = {
     url: SUPABASE_URL,
     key: SUPABASE_ANON_KEY,
+    deviceId: null,
 
-    // Set the anon key
-    init(anonKey) {
-        this.key = anonKey;
-        localStorage.setItem('supabase_anon_key', anonKey);
+    // Gera ou recupera ID único do dispositivo
+    getDeviceId() {
+        if (this.deviceId) return this.deviceId;
+
+        let id = localStorage.getItem('petcare_device_id');
+        if (!id) {
+            id = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('petcare_device_id', id);
+        }
+        this.deviceId = id;
+        return id;
     },
 
-    load() {
-        const key = localStorage.getItem('supabase_anon_key');
-        if (key) this.key = key;
-        return !!key && key !== 'YOUR_ANON_KEY_HERE';
-    },
-
-    // Get auth headers
-    headers(accessToken = null) {
-        const h = {
+    // Headers para requisições
+    headers() {
+        return {
             'Content-Type': 'application/json',
             'apikey': this.key,
+            'Authorization': `Bearer ${this.key}`
         };
-        if (accessToken) {
-            h['Authorization'] = `Bearer ${accessToken}`;
-        } else {
-            h['Authorization'] = `Bearer ${this.key}`;
-        }
-        return h;
     },
 
-    // ==================== AUTH ====================
-
-    // Sign in with Google (opens popup)
-    async signInWithGoogle() {
-        const redirectUrl = window.location.origin + window.location.pathname;
-        const authUrl = `${this.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
-        window.location.href = authUrl;
+    // Verifica se está online
+    isOnline() {
+        return navigator.onLine;
     },
 
-    // Sign out
-    async signOut() {
-        const token = this.getAccessToken();
-        if (token) {
-            await fetch(`${this.url}/auth/v1/logout`, {
-                method: 'POST',
-                headers: this.headers(token)
-            });
-        }
-        localStorage.removeItem('supabase_session');
-        localStorage.removeItem('supabase_user');
-    },
+    // ==================== SYNC ====================
 
-    // Get current session from URL hash (after OAuth redirect)
-    async handleAuthCallback() {
-        const hash = window.location.hash;
-        if (hash && hash.includes('access_token')) {
-            const params = new URLSearchParams(hash.substring(1));
-            const session = {
-                access_token: params.get('access_token'),
-                refresh_token: params.get('refresh_token'),
-                expires_in: params.get('expires_in'),
-                token_type: params.get('token_type'),
-                expires_at: Date.now() + (parseInt(params.get('expires_in')) * 1000)
+    // Sincroniza dados do pet com a nuvem
+    async syncPet(petData) {
+        if (!this.isOnline()) return null;
+
+        try {
+            const deviceId = this.getDeviceId();
+            const data = {
+                device_id: deviceId,
+                name: petData.name,
+                breed: petData.breed,
+                photo_data: petData.photo,
+                updated_at: new Date().toISOString()
             };
 
-            // Get user data
-            const user = await this.getUser(session.access_token);
-            if (user) {
-                localStorage.setItem('supabase_session', JSON.stringify(session));
-                localStorage.setItem('supabase_user', JSON.stringify(user));
-            }
-
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            return { session, user };
-        }
-        return null;
-    },
-
-    // Get user from token
-    async getUser(accessToken) {
-        try {
-            const res = await fetch(`${this.url}/auth/v1/user`, {
-                headers: this.headers(accessToken)
+            const res = await fetch(`${this.url}/rest/v1/devices`, {
+                method: 'POST',
+                headers: {
+                    ...this.headers(),
+                    'Prefer': 'return=representation,resolution=merge-duplicates'
+                },
+                body: JSON.stringify(data)
             });
-            if (res.ok) return await res.json();
+
+            return res.ok ? await res.json() : null;
         } catch (e) {
-            console.error('Get user error:', e);
+            console.log('Sync pet offline:', e.message);
+            return null;
         }
-        return null;
     },
 
-    // Get stored session
-    getSession() {
-        const s = localStorage.getItem('supabase_session');
-        if (s) {
-            const session = JSON.parse(s);
-            // Check if expired
-            if (session.expires_at && Date.now() > session.expires_at) {
-                this.signOut();
-                return null;
-            }
-            return session;
+    // Sincroniza estatísticas diárias
+    async syncStats(stats) {
+        if (!this.isOnline()) return null;
+
+        try {
+            const deviceId = this.getDeviceId();
+            const data = {
+                device_id: deviceId,
+                date: stats.date,
+                happiness: stats.happiness,
+                points: stats.points,
+                streak: stats.streak,
+                completed_tasks: stats.done,
+                updated_at: new Date().toISOString()
+            };
+
+            const res = await fetch(`${this.url}/rest/v1/device_stats`, {
+                method: 'POST',
+                headers: {
+                    ...this.headers(),
+                    'Prefer': 'return=representation,resolution=merge-duplicates'
+                },
+                body: JSON.stringify(data)
+            });
+
+            return res.ok ? await res.json() : null;
+        } catch (e) {
+            console.log('Sync stats offline:', e.message);
+            return null;
         }
-        return null;
     },
 
-    // Get stored user
-    getStoredUser() {
-        const u = localStorage.getItem('supabase_user');
-        return u ? JSON.parse(u) : null;
-    },
+    // Carrega dados da nuvem (para recuperação)
+    async loadFromCloud() {
+        if (!this.isOnline()) return null;
 
-    // Get access token
-    getAccessToken() {
-        const session = this.getSession();
-        return session?.access_token || null;
-    },
+        try {
+            const deviceId = this.getDeviceId();
 
-    // Check if logged in
-    isLoggedIn() {
-        return !!this.getSession();
-    },
+            // Busca dados do pet
+            const petRes = await fetch(
+                `${this.url}/rest/v1/devices?device_id=eq.${deviceId}&select=*`,
+                { headers: this.headers() }
+            );
 
-    // ==================== DATABASE ====================
+            if (!petRes.ok) return null;
+            const pets = await petRes.json();
+            if (!pets.length) return null;
 
-    // Query helper
-    async query(table, options = {}) {
-        const token = this.getAccessToken();
-        let url = `${this.url}/rest/v1/${table}`;
+            // Busca stats de hoje
+            const today = new Date().toISOString().split('T')[0];
+            const statsRes = await fetch(
+                `${this.url}/rest/v1/device_stats?device_id=eq.${deviceId}&date=eq.${today}&select=*`,
+                { headers: this.headers() }
+            );
 
-        const params = new URLSearchParams();
+            const stats = statsRes.ok ? await statsRes.json() : [];
 
-        if (options.select) params.append('select', options.select);
-        if (options.eq) {
-            for (const [col, val] of Object.entries(options.eq)) {
-                params.append(col, `eq.${val}`);
-            }
+            return {
+                pet: {
+                    name: pets[0].name,
+                    breed: pets[0].breed,
+                    photo: pets[0].photo_data
+                },
+                stats: stats[0] || null
+            };
+        } catch (e) {
+            console.log('Load from cloud error:', e.message);
+            return null;
         }
-        if (options.order) params.append('order', options.order);
-        if (options.limit) params.append('limit', options.limit);
+    },
 
-        const queryString = params.toString();
-        if (queryString) url += '?' + queryString;
+    // Sincroniza tudo de uma vez
+    async syncAll(state) {
+        if (!this.isOnline() || !state.pet) return;
 
-        const res = await fetch(url, {
-            headers: this.headers(token)
+        await this.syncPet(state.pet);
+        await this.syncStats({
+            date: state.lastDate,
+            happiness: state.happiness,
+            points: state.points,
+            streak: state.streak,
+            done: state.done
         });
 
-        return res.ok ? await res.json() : [];
-    },
-
-    // Insert
-    async insert(table, data) {
-        const token = this.getAccessToken();
-        const res = await fetch(`${this.url}/rest/v1/${table}`, {
-            method: 'POST',
-            headers: {
-                ...this.headers(token),
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(data)
-        });
-        return res.ok ? await res.json() : null;
-    },
-
-    // Update
-    async update(table, data, eq) {
-        const token = this.getAccessToken();
-        const params = new URLSearchParams();
-        for (const [col, val] of Object.entries(eq)) {
-            params.append(col, `eq.${val}`);
-        }
-
-        const res = await fetch(`${this.url}/rest/v1/${table}?${params}`, {
-            method: 'PATCH',
-            headers: {
-                ...this.headers(token),
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(data)
-        });
-        return res.ok ? await res.json() : null;
-    },
-
-    // Delete
-    async delete(table, eq) {
-        const token = this.getAccessToken();
-        const params = new URLSearchParams();
-        for (const [col, val] of Object.entries(eq)) {
-            params.append(col, `eq.${val}`);
-        }
-
-        const res = await fetch(`${this.url}/rest/v1/${table}?${params}`, {
-            method: 'DELETE',
-            headers: this.headers(token)
-        });
-        return res.ok;
-    },
-
-    // Upsert (insert or update)
-    async upsert(table, data) {
-        const token = this.getAccessToken();
-        const res = await fetch(`${this.url}/rest/v1/${table}`, {
-            method: 'POST',
-            headers: {
-                ...this.headers(token),
-                'Prefer': 'return=representation,resolution=merge-duplicates'
-            },
-            body: JSON.stringify(data)
-        });
-        return res.ok ? await res.json() : null;
-    },
-
-    // ==================== STORAGE ====================
-
-    // Upload file
-    async uploadFile(bucket, path, file) {
-        const token = this.getAccessToken();
-        const res = await fetch(`${this.url}/storage/v1/object/${bucket}/${path}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'apikey': this.key
-            },
-            body: file
-        });
-
-        if (res.ok) {
-            return `${this.url}/storage/v1/object/public/${bucket}/${path}`;
-        }
-        return null;
-    },
-
-    // Get public URL
-    getPublicUrl(bucket, path) {
-        return `${this.url}/storage/v1/object/public/${bucket}/${path}`;
+        console.log('☁️ Dados sincronizados');
     }
 };
 
