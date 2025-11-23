@@ -53,10 +53,8 @@ function hideLoading() { $('#loading').style.display = 'none'; }
 // Storage
 function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    // Sync to cloud (non-blocking)
-    if (window.Supabase) {
-        Supabase.syncAll(state);
-    }
+    // Sync to cloud (non-blocking) - desativado até configurar tabelas
+    // if (window.Supabase) Supabase.syncAll(state);
 }
 
 function load() {
