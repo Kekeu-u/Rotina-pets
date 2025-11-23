@@ -198,7 +198,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
   const handleSignUp = useCallback(async (email: string, password: string) => {
     const { data, error } = await signUp(email, password);
 
-    if (!error && data.user) {
+    if (!error && data?.user) {
       if (data.session) {
         setUser(data.user);
         setIsAuthenticated(true);
@@ -212,7 +212,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
   const handleSignIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await signIn(email, password);
 
-    if (!error && data.user) {
+    if (!error && data?.user) {
       setUser(data.user);
       setIsAuthenticated(true);
       await loadUserData(data.user.email || data.user.id);
