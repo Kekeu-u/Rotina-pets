@@ -3,22 +3,132 @@
 import { useState, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { DEFAULT_PHOTO } from '@/lib/constants';
+import { Check, Loader2 } from 'lucide-react';
+
+interface ProcessingStep {
+  id: string;
+  label: string;
+  status: 'pending' | 'active' | 'done';
+}
 
 export default function SetupScreen() {
-  const { setPet } = usePet();
+  const { setPet, aiConfigured } = usePet();
   const [name, setName] = useState('');
   const [breed, setBreed] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
+    { id: 'optimize', label: 'Otimizando imagem', status: 'pending' },
+    { id: 'analyze', label: 'Analisando pet', status: 'pending' },
+    { id: 'save', label: 'Preparando', status: 'pending' },
+  ]);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setPhoto(ev.target?.result as string);
+  const optimizeImage = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Max size 400px for avatars
+        const maxSize = 400;
+        let { width, height } = img;
+
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG 80% quality
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
-      reader.readAsDataURL(file);
+      img.src = dataUrl;
+    });
+  };
+
+  const analyzePhotoWithAI = async (petName: string, petBreed: string): Promise<string | null> => {
+    if (!aiConfigured) return null;
+
+    try {
+      const res = await fetch('/api/ai/analyze-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ petName, petBreed }),
+      });
+      const data = await res.json();
+      return data.message || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const updateStep = (stepId: string, status: 'pending' | 'active' | 'done') => {
+    setProcessingSteps(prev => prev.map(s =>
+      s.id === stepId ? { ...s, status } : s
+    ));
+  };
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    setAnalysisResult(null);
+    setProcessingSteps([
+      { id: 'optimize', label: 'Otimizando imagem', status: 'pending' },
+      { id: 'analyze', label: 'Analisando pet', status: 'pending' },
+      { id: 'save', label: 'Preparando', status: 'pending' },
+    ]);
+
+    try {
+      // Read file
+      const reader = new FileReader();
+      const originalData = await new Promise<string>((resolve, reject) => {
+        reader.onload = (ev) => resolve(ev.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Step 1: Optimize
+      updateStep('optimize', 'active');
+      await sleep(500);
+      const optimizedData = await optimizeImage(originalData);
+      updateStep('optimize', 'done');
+
+      // Step 2: Analyze (if AI configured and we have name/breed)
+      updateStep('analyze', 'active');
+      await sleep(400);
+      if (aiConfigured && name && breed) {
+        const analysis = await analyzePhotoWithAI(name, breed);
+        if (analysis) {
+          setAnalysisResult(analysis);
+        }
+      }
+      updateStep('analyze', 'done');
+
+      // Step 3: Save
+      updateStep('save', 'active');
+      await sleep(300);
+      setPhoto(optimizedData);
+      updateStep('save', 'done');
+
+      // Close modal after a moment
+      await sleep(800);
+    } catch (error) {
+      console.error('Error processing photo:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -53,6 +163,13 @@ export default function SetupScreen() {
             </>
           )}
         </div>
+
+        {analysisResult && (
+          <p className="text-center text-sm text-indigo-400 animate-fadeIn">
+            ✨ {analysisResult}
+          </p>
+        )}
+
         <input
           type="file"
           ref={fileInputRef}
@@ -86,6 +203,46 @@ export default function SetupScreen() {
           Começar
         </button>
       </form>
+
+      {/* Processing Modal */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-2xl p-6 max-w-xs w-full mx-4">
+            <h3 className="text-lg font-semibold text-center mb-6">Processando foto...</h3>
+
+            <div className="space-y-4">
+              {processingSteps.map((step) => (
+                <div key={step.id} className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    step.status === 'done'
+                      ? 'bg-green-500'
+                      : step.status === 'active'
+                        ? 'bg-indigo-500'
+                        : 'bg-gray-700'
+                  }`}>
+                    {step.status === 'done' ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : step.status === 'active' ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                    )}
+                  </div>
+                  <span className={`text-sm ${
+                    step.status === 'done'
+                      ? 'text-green-400'
+                      : step.status === 'active'
+                        ? 'text-white'
+                        : 'text-gray-500'
+                  }`}>
+                    {step.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

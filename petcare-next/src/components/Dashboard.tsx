@@ -61,7 +61,7 @@ export default function Dashboard() {
                 : 'text-gray-400 hover:text-gray-300'
             }`}
           >
-            {tab === 'loja' ? '🛒 Loja' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'loja' ? '🛒 Loja' : tab === 'acoes' ? 'Ações' : tab === 'historico' ? 'Histórico' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </nav>
