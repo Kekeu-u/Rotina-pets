@@ -28,7 +28,7 @@ const ACTIONS = {
     agua: 'Água', brincar: 'Brincar', banho: 'Banho'
 };
 
-// Produtos da loja - Atualize os links de afiliado aqui
+// Produtos da loja - Links Mercado Livre
 const SHOP_PRODUCTS = [
     {
         id: 'cacto',
@@ -37,7 +37,7 @@ const SHOP_PRODUCTS = [
         price: 'R$ 34,90',
         badge: '🔥 Popular',
         image: 'https://http2.mlstatic.com/D_NQ_NP_2X_622629-MLU72541779498_102023-F.webp',
-        link: 'https://www.mercadolivre.com.br/sec/1wEe68m'
+        link: 'https://www.mercadolivre.com.br/cacto-dancante-e-falante-toca-musica-repete-a-fala-brinquedo/p/MLB22678530'
     },
     {
         id: 'mordedor',
@@ -46,7 +46,7 @@ const SHOP_PRODUCTS = [
         price: 'R$ 29,90',
         badge: '🦷 Saúde',
         image: 'https://http2.mlstatic.com/D_NQ_NP_2X_917941-MLB72567498498_102023-F.webp',
-        link: 'https://www.mercadolivre.com.br/sec/27jb2Mm'
+        link: 'https://www.mercadolivre.com.br/mordedor-escova-dente-cachorro-brinquedo-resistente-grande-cor-azul/p/MLB29494058'
     },
     {
         id: 'corda',
@@ -55,7 +55,7 @@ const SHOP_PRODUCTS = [
         price: 'R$ 39,90',
         badge: '💪 Forte',
         image: 'https://http2.mlstatic.com/D_NQ_NP_2X_806575-MLB53162729498_012023-F.webp',
-        link: 'https://www.mercadolivre.com.br/sec/2mMKX3A'
+        link: 'https://produto.mercadolivre.com.br/MLB-3227296476-4-brinquedo-pet-corda-resistente-interativo-cachorro-forte-_JM'
     }
 ];
 
