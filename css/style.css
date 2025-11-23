@@ -195,16 +195,32 @@ body {
     cursor: pointer;
 }
 
-.avatar {
+.avatar-wrapper {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    object-fit: cover;
     border: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    overflow: hidden;
     transition: transform 0.2s;
 }
 
-.avatar-container:active .avatar {
+.avatar-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--primary);
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-container:active .avatar-wrapper {
     transform: scale(0.95);
 }
 
@@ -233,20 +249,103 @@ body {
     50% { transform: scale(1.15); }
 }
 
-/* Thought Modal */
-.modal-box.thought {
+/* Avatar Menu Modal */
+.modal-box.avatar-menu {
     background: linear-gradient(135deg, #1a1a2e, #16162a);
     text-align: center;
     padding: 24px;
+    max-width: 320px;
 }
 
-.thought-photo {
-    width: 80px;
-    height: 80px;
+.avatar-menu-preview {
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    object-fit: cover;
     border: 3px solid var(--primary);
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    overflow: hidden;
+}
+
+.avatar-menu-icon {
+    width: 50px;
+    height: 50px;
+    color: var(--primary);
+}
+
+.avatar-menu-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-box.avatar-menu h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.avatar-menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 16px;
+}
+
+.avatar-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.avatar-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+.avatar-option:active {
+    transform: scale(0.98);
+}
+
+.avatar-option i {
+    width: 20px;
+    height: 20px;
+    color: var(--muted);
+}
+
+.avatar-option.ai {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.avatar-option.ai i {
+    color: #a78bfa;
+}
+
+.avatar-option.ai:hover {
+    border-color: #8b5cf6;
+}
+
+.avatar-thought-container {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .thought-bubble-big {

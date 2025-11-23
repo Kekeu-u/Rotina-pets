@@ -12,6 +12,9 @@
     <link rel="apple-touch-icon" href="assets/icon-192.svg">
     <link rel="stylesheet" href="css/style.css">
 
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <title>PetCare</title>
 </head>
 <body>
@@ -66,7 +69,10 @@
             <header class="header">
                 <div class="header-left">
                     <div class="avatar-container" id="avatar-click">
-                        <img id="pet-avatar" class="avatar" src="" alt="">
+                        <div class="avatar-wrapper">
+                            <i data-lucide="dog" class="avatar-icon" id="pet-avatar-icon"></i>
+                            <img id="pet-avatar" class="avatar" src="" alt="" style="display: none;">
+                        </div>
                         <div class="avatar-ai-badge" id="ai-badge">✨</div>
                     </div>
                     <div>
@@ -244,16 +250,42 @@
             </div>
         </div>
 
-        <!-- Pet Thought Modal -->
-        <div id="thought-modal" class="modal" style="display: none;">
-            <div class="modal-box thought">
-                <img id="thought-pet-photo" class="thought-photo" src="" alt="">
-                <div class="thought-bubble-big">
-                    <p id="thought-text">💭</p>
+        <!-- Avatar Menu Modal -->
+        <div id="avatar-menu-modal" class="modal" style="display: none;">
+            <div class="modal-box avatar-menu">
+                <div class="avatar-menu-preview">
+                    <i data-lucide="dog" class="avatar-menu-icon" id="avatar-menu-icon"></i>
+                    <img id="avatar-menu-photo" class="avatar-menu-img" src="" alt="" style="display: none;">
                 </div>
+                <h3 id="avatar-menu-name">Pet</h3>
+
+                <div class="avatar-menu-options">
+                    <button class="avatar-option" id="avatar-upload-btn">
+                        <i data-lucide="camera"></i>
+                        <span>Enviar Foto</span>
+                    </button>
+                    <button class="avatar-option" id="avatar-remove-btn" style="display: none;">
+                        <i data-lucide="trash-2"></i>
+                        <span>Remover Foto</span>
+                    </button>
+                    <button class="avatar-option ai" id="avatar-ai-btn">
+                        <i data-lucide="sparkles"></i>
+                        <span>Pensamento IA</span>
+                    </button>
+                </div>
+
+                <div class="avatar-thought-container" id="avatar-thought-container" style="display: none;">
+                    <div class="thought-bubble-big">
+                        <p id="avatar-thought-text">💭</p>
+                    </div>
+                </div>
+
                 <small class="thought-hint">Toque fora para fechar</small>
             </div>
         </div>
+
+        <!-- Hidden file input for avatar upload -->
+        <input type="file" id="avatar-photo-input" accept="image/*" hidden>
 
         <!-- Loading -->
         <div id="loading" class="loading" style="display: none;">

@@ -142,7 +142,9 @@ function initSetup() {
 function update() {
     if (!state.pet) return;
 
-    $('#pet-avatar').src = state.pet.photo || DEFAULT_PHOTO;
+    // Update avatar display (icon vs photo)
+    updateAvatarDisplay();
+
     $('#pet-name-display').textContent = state.pet.name;
     $('#pet-breed-display').textContent = state.pet.breed;
 
@@ -155,9 +157,25 @@ function update() {
 
     renderTasks();
     renderTimeline();
-    loadPetThought();
+    updateAIBadge();
     loadAI();
     updateShop();
+}
+
+// Update avatar display (icon or photo)
+function updateAvatarDisplay() {
+    const avatar = $('#pet-avatar');
+    const icon = $('#pet-avatar-icon');
+    const hasPhoto = state.pet?.photo && state.pet.photo !== DEFAULT_PHOTO;
+
+    if (hasPhoto) {
+        avatar.src = state.pet.photo;
+        avatar.style.display = 'block';
+        if (icon) icon.style.display = 'none';
+    } else {
+        avatar.style.display = 'none';
+        if (icon) icon.style.display = 'block';
+    }
 }
 
 // Shop
@@ -298,22 +316,84 @@ async function showReaction(taskName, emoji) {
     }
 }
 
-// Pet Thought Modal
-async function openThoughtModal() {
+// Avatar Menu Modal
+function openAvatarMenu() {
     if (!state.pet) return;
 
-    const modal = $('#thought-modal');
-    const photo = $('#thought-pet-photo');
-    const text = $('#thought-text');
+    const modal = $('#avatar-menu-modal');
+    const photo = $('#avatar-menu-photo');
+    const icon = $('#avatar-menu-icon');
+    const nameEl = $('#avatar-menu-name');
+    const removeBtn = $('#avatar-remove-btn');
+    const thoughtContainer = $('#avatar-thought-container');
 
-    // Set photo
-    photo.src = state.pet.photo || DEFAULT_PHOTO;
+    // Update name
+    nameEl.textContent = state.pet.name;
 
-    // Show modal with loading state
+    // Update photo/icon display
+    const hasPhoto = state.pet.photo && state.pet.photo !== DEFAULT_PHOTO;
+    if (hasPhoto) {
+        photo.src = state.pet.photo;
+        photo.style.display = 'block';
+        icon.style.display = 'none';
+        removeBtn.style.display = 'flex';
+    } else {
+        photo.style.display = 'none';
+        icon.style.display = 'block';
+        removeBtn.style.display = 'none';
+    }
+
+    // Hide thought container initially
+    thoughtContainer.style.display = 'none';
+
+    // Show modal
     modal.style.display = 'flex';
+
+    // Reinitialize Lucide icons in modal
+    if (window.lucide) lucide.createIcons();
+}
+
+// Handle avatar photo upload
+function handleAvatarUpload() {
+    const input = $('#avatar-photo-input');
+    input.click();
+}
+
+function processAvatarUpload(file) {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        state.pet.photo = e.target.result;
+        save();
+
+        // Update displays
+        updateAvatarDisplay();
+        openAvatarMenu(); // Refresh modal
+    };
+    reader.readAsDataURL(file);
+}
+
+// Remove avatar photo
+function removeAvatarPhoto() {
+    if (!state.pet) return;
+
+    state.pet.photo = DEFAULT_PHOTO;
+    save();
+
+    // Update displays
+    updateAvatarDisplay();
+    openAvatarMenu(); // Refresh modal
+}
+
+// AI thought in avatar menu
+async function loadAvatarThought() {
+    const container = $('#avatar-thought-container');
+    const text = $('#avatar-thought-text');
+
+    container.style.display = 'block';
     text.textContent = 'Pensando...';
 
-    // If AI not configured, show fallback
     if (!window.AI?.isConfigured()) {
         text.textContent = `${state.pet.name} está feliz em te ver! 🐕`;
         return;
@@ -344,11 +424,6 @@ function updateAIBadge() {
     }
 }
 
-// Simplified - no auto-load needed
-function loadPetThought() {
-    updateAIBadge();
-}
-
 // Decay
 setInterval(() => {
     if (state.pet && state.happiness > 0) {
@@ -365,8 +440,19 @@ function initEvents() {
         show('setup');
     };
 
-    // Avatar click to open thought modal
-    $('#avatar-click').onclick = () => openThoughtModal();
+    // Avatar click to open menu
+    $('#avatar-click').onclick = () => openAvatarMenu();
+
+    // Avatar menu buttons
+    $('#avatar-upload-btn').onclick = () => handleAvatarUpload();
+    $('#avatar-remove-btn').onclick = () => removeAvatarPhoto();
+    $('#avatar-ai-btn').onclick = () => loadAvatarThought();
+
+    // Avatar photo input
+    $('#avatar-photo-input').onchange = e => {
+        const file = e.target.files[0];
+        if (file) processAvatarUpload(file);
+    };
 
     // Tabs
     $$('.tab').forEach(tab => {
@@ -479,6 +565,11 @@ function init() {
     initSetup();
     initEvents();
     if (window.AI) AI.load();
+
+    // Initialize Lucide icons
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 
     // Show splash for 2 seconds, then show app
     setTimeout(() => {
