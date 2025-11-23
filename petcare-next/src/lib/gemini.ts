@@ -11,8 +11,8 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 // Text generation model
 const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-// Image generation - using fetch directly for Nano Banana
-const IMAGE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+// Image generation - using Nano Banana (gemini-2.5-flash-image)
+const IMAGE_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
 
 export async function generateText(prompt: string): Promise<string | null> {
   if (!textModel) {
