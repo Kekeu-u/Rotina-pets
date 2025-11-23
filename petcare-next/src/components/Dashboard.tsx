@@ -8,10 +8,11 @@ import TaskList from './TaskList';
 import Actions from './Actions';
 import Shop from './Shop';
 import Timeline from './Timeline';
+import Report from './Report';
 import SettingsModal from './SettingsModal';
 import AvatarMenu from './AvatarMenu';
 
-type Tab = 'rotina' | 'acoes' | 'loja' | 'historico';
+type Tab = 'rotina' | 'acoes' | 'relatorio' | 'loja';
 
 export default function Dashboard() {
   const { state } = usePet();
@@ -51,17 +52,17 @@ export default function Dashboard() {
 
       {/* Tabs - Liquid Glass Pills */}
       <nav className="flex gap-2 px-4 py-3 glass flex-shrink-0 relative z-10">
-        {(['rotina', 'acoes', 'loja', 'historico'] as Tab[]).map((tab) => (
+        {(['rotina', 'acoes', 'relatorio', 'loja'] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 px-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+            className={`flex-1 py-2.5 px-2 text-sm font-medium rounded-xl transition-all duration-300 ${
               activeTab === tab
                 ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/20'
                 : 'glass-button text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
             }`}
           >
-            {tab === 'loja' ? '🛒 Loja' : tab === 'acoes' ? 'Ações' : tab === 'historico' ? 'Histórico' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'loja' ? '🛒' : tab === 'acoes' ? 'Ações' : tab === 'relatorio' ? '📊' : 'Rotina'}
           </button>
         ))}
       </nav>
@@ -70,8 +71,8 @@ export default function Dashboard() {
       <div className="flex-1 overflow-y-auto p-4 pb-safe">
         {activeTab === 'rotina' && <TaskList />}
         {activeTab === 'acoes' && <Actions />}
+        {activeTab === 'relatorio' && <Report />}
         {activeTab === 'loja' && <Shop />}
-        {activeTab === 'historico' && <Timeline />}
       </div>
 
       {/* Modals */}

@@ -3,11 +3,15 @@
 import { useState, useRef } from 'react';
 import { usePet } from '@/context/PetContext';
 import { TASKS } from '@/lib/constants';
+import { Task } from '@/types';
 import { useAnime } from '@/hooks/useAnime';
+import TaskModal from './TaskModal';
+import { FileText } from 'lucide-react';
 
 export default function TaskList() {
   const { state, completeTask, aiConfigured } = usePet();
   const [reaction, setReaction] = useState<{ emoji: string; message: string } | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { confetti, celebratePoints, bounce } = useAnime();
 
@@ -21,11 +25,18 @@ export default function TaskList() {
     return d.getHours() * 60 + d.getMinutes();
   };
 
-  const handleTaskClick = (taskId: string, event: React.MouseEvent<HTMLDivElement>) => {
+  const handleTaskClick = (task: Task) => {
+    // Open modal for all tasks (done or not)
+    setSelectedTask(task);
+  };
+
+  const handleQuickComplete = (taskId: string, event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
     const task = TASKS.find(t => t.id === taskId);
     if (!task || state.done.includes(taskId)) return;
 
-    const element = event.currentTarget;
+    const element = event.currentTarget.parentElement;
+    if (!element) return;
 
     // Animate completion
     bounce(element);
@@ -38,10 +49,10 @@ export default function TaskList() {
       confetti(containerRef.current, 20);
     }
 
-    // Complete task immediately (não bloqueia)
+    // Complete task immediately
     completeTask(taskId);
 
-    // Get AI reaction in background (opcional)
+    // Get AI reaction in background
     if (aiConfigured && state.pet) {
       fetch('/api/ai/pet-reaction', {
         method: 'POST',
@@ -78,20 +89,17 @@ export default function TaskList() {
 
       {TASKS.map((task, index) => {
         const done = state.done.includes(task.id);
+        const hasNote = !!state.taskNotes[task.id]?.note;
         const c = currMins();
         const late = !done && (task.time === '00:00' ? c < 60 : c > toMins(task.time) + 30);
 
         return (
           <div
             key={task.id}
-            onClick={(e) => !done && handleTaskClick(task.id, e)}
+            onClick={() => handleTaskClick(task)}
             style={{ animationDelay: `${index * 50}ms` }}
-            className={`glass-task flex items-center gap-3 p-4 transition-all animate-fadeInUp ${
-              done
-                ? 'opacity-60'
-                : late
-                ? 'cursor-pointer'
-                : 'cursor-pointer'
+            className={`glass-task flex items-center gap-3 p-4 transition-all animate-fadeInUp cursor-pointer ${
+              done ? 'opacity-70' : ''
             }`}
           >
             {/* Status indicator line */}
@@ -101,12 +109,15 @@ export default function TaskList() {
               'bg-gradient-to-b from-indigo-400 to-indigo-600'
             }`}></div>
 
-            {/* Checkbox */}
-            <div className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-              done
-                ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                : 'border-2 border-gray-500/50 group-hover:border-indigo-500'
-            }`}>
+            {/* Checkbox - clickable for quick complete */}
+            <div
+              onClick={(e) => handleQuickComplete(task.id, e)}
+              className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                done
+                  ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                  : 'border-2 border-gray-500/50 hover:border-indigo-500 hover:bg-indigo-500/10'
+              }`}
+            >
               {done && (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -119,6 +130,9 @@ export default function TaskList() {
               <div className={`font-medium flex items-center gap-2 ${done ? 'line-through opacity-70' : ''}`}>
                 <span className="text-xl">{task.emoji}</span>
                 <span className="truncate">{task.name}</span>
+                {hasNote && (
+                  <FileText className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+                )}
               </div>
               <div className={`text-sm ${late ? 'text-red-400' : 'text-[var(--foreground-secondary)]'}`}>
                 {task.time}
@@ -137,6 +151,14 @@ export default function TaskList() {
           </div>
         );
       })}
+
+      {/* Task Modal */}
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   );
 }
