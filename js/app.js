@@ -59,6 +59,25 @@ const SHOP_PRODUCTS = [
     }
 ];
 
+// Storage for generated product preview images
+const PRODUCT_PREVIEWS_KEY = 'petcare_product_previews';
+
+function getProductPreviews() {
+    const data = localStorage.getItem(PRODUCT_PREVIEWS_KEY);
+    return data ? JSON.parse(data) : {};
+}
+
+function saveProductPreview(productId, imageData) {
+    const previews = getProductPreviews();
+    previews[productId] = imageData;
+    localStorage.setItem(PRODUCT_PREVIEWS_KEY, JSON.stringify(previews));
+}
+
+function getProductPreview(productId) {
+    const previews = getProductPreviews();
+    return previews[productId] || null;
+}
+
 let state = {
     pet: null,
     happiness: 50,
@@ -248,12 +267,18 @@ function renderShopProducts() {
     if (!container) return;
 
     const hasAI = window.AI?.isConfigured();
+    const previews = getProductPreviews();
 
-    container.innerHTML = SHOP_PRODUCTS.map(product => `
-        <div class="product-card-wrap">
+    container.innerHTML = SHOP_PRODUCTS.map(product => {
+        const hasPreview = !!previews[product.id];
+        const previewImg = previews[product.id];
+
+        return `
+        <div class="product-card-wrap ${hasPreview ? 'has-preview' : ''}">
             <a href="${product.link}" target="_blank" rel="noopener" class="product-card" data-product="${product.id}">
                 <div class="product-img-wrap">
-                    <img src="${product.image}" alt="${product.name}" loading="lazy" id="product-img-${product.id}">
+                    <img src="${product.image}" alt="${product.name}" loading="lazy" class="product-img-original" id="product-img-${product.id}">
+                    ${hasPreview ? `<img src="${previewImg}" alt="${state.pet?.name} com ${product.name}" class="product-img-preview">` : ''}
                 </div>
                 <div class="product-info">
                     <h4>${product.name}</h4>
@@ -261,15 +286,16 @@ function renderShopProducts() {
                     <span class="product-price">${product.price}</span>
                 </div>
                 <div class="product-badge">${product.badge}</div>
+                ${hasPreview ? '<div class="product-ai-badge">✨ IA</div>' : ''}
             </a>
             ${hasAI ? `
                 <button class="product-ai-btn" onclick="event.stopPropagation(); generateProductImage('${product.id}', '${product.name}', '${product.description}')">
                     <i data-lucide="sparkles"></i>
-                    <span>Ver ${state.pet?.name || 'pet'} com esse!</span>
+                    <span>${hasPreview ? 'Gerar nova' : `Ver ${state.pet?.name || 'pet'} com esse!`}</span>
                 </button>
             ` : ''}
         </div>
-    `).join('');
+    `}).join('');
 
     // Reinit icons
     if (window.lucide) lucide.createIcons();
@@ -296,7 +322,14 @@ async function generateProductImage(productId, productName, productDescription) 
         );
 
         if (imageData) {
-            showGeneratedImageModal(imageData, productName);
+            // Save preview for future use
+            saveProductPreview(productId, imageData);
+            console.log(`✅ Preview salvo para ${productId}`);
+
+            showGeneratedImageModal(imageData, productName, productId);
+
+            // Update shop to show new preview
+            renderShopProducts();
         } else {
             hideImageModal();
             alert('Não foi possível gerar a imagem. Tente novamente.');
@@ -348,14 +381,16 @@ function showImageGeneratingModal(productName) {
 }
 
 // Show generated image
-function showGeneratedImageModal(imageData, productName) {
+function showGeneratedImageModal(imageData, productName, productId) {
     const preview = $('#image-gen-preview');
     const title = $('#image-gen-title');
     const actions = $('#image-gen-actions');
     const download = $('#image-gen-download');
+    const status = $('#image-gen-status');
 
     preview.innerHTML = `<img src="${imageData}" alt="${state.pet.name} com ${productName}">`;
     title.textContent = `${state.pet.name} adorou! 🎉`;
+    status.textContent = 'Imagem salva na loja!';
     download.href = imageData;
     download.download = `${state.pet.name}-${productName}.png`;
     actions.style.display = 'flex';
