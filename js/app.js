@@ -28,6 +28,37 @@ const ACTIONS = {
     agua: 'Água', brincar: 'Brincar', banho: 'Banho'
 };
 
+// Produtos da loja - Atualize os links de afiliado aqui
+const SHOP_PRODUCTS = [
+    {
+        id: 'cacto',
+        name: 'Cacto Dançante',
+        description: 'Toca música e repete fala!',
+        price: 'R$ 34,90',
+        badge: '🔥 Popular',
+        image: 'https://http2.mlstatic.com/D_NQ_NP_2X_622629-MLU72541779498_102023-F.webp',
+        link: 'https://www.mercadolivre.com.br/sec/1wEe68m'
+    },
+    {
+        id: 'mordedor',
+        name: 'Mordedor Escova',
+        description: 'Limpa os dentes brincando!',
+        price: 'R$ 29,90',
+        badge: '🦷 Saúde',
+        image: 'https://http2.mlstatic.com/D_NQ_NP_2X_917941-MLB72567498498_102023-F.webp',
+        link: 'https://www.mercadolivre.com.br/sec/27jb2Mm'
+    },
+    {
+        id: 'corda',
+        name: 'Kit 4 Cordas',
+        description: 'Brinquedo resistente!',
+        price: 'R$ 39,90',
+        badge: '💪 Forte',
+        image: 'https://http2.mlstatic.com/D_NQ_NP_2X_806575-MLB53162729498_012023-F.webp',
+        link: 'https://www.mercadolivre.com.br/sec/2mMKX3A'
+    }
+];
+
 let state = {
     pet: null,
     happiness: 50,
@@ -204,8 +235,31 @@ function updateShop() {
 
     if (shopName) shopName.textContent = state.pet.name;
 
+    // Render products
+    renderShopProducts();
+
     // Reinit Lucide icons
     if (window.lucide) lucide.createIcons();
+}
+
+// Render shop products dynamically
+function renderShopProducts() {
+    const container = $('#shop-products');
+    if (!container) return;
+
+    container.innerHTML = SHOP_PRODUCTS.map(product => `
+        <a href="${product.link}" target="_blank" rel="noopener" class="product-card" data-product="${product.id}">
+            <div class="product-img-wrap">
+                <img src="${product.image}" alt="${product.name}" loading="lazy">
+            </div>
+            <div class="product-info">
+                <h4>${product.name}</h4>
+                <p>${product.description}</p>
+                <span class="product-price">${product.price}</span>
+            </div>
+            <div class="product-badge">${product.badge}</div>
+        </a>
+    `).join('');
 }
 
 async function loadShopRecommendation() {
