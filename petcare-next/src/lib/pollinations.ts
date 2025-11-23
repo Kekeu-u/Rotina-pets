@@ -22,7 +22,7 @@ export function getImageUrl(prompt: string, options: PollinationsOptions = {}): 
     width = 512,
     height = 512,
     seed = Math.floor(Math.random() * 1000000),
-    model = 'flux' // Modelo gratuito padrão
+    model = 'nanobanana' // Modelo Nano Banana (seed tier)
   } = options;
 
   const encodedPrompt = encodeURIComponent(prompt);

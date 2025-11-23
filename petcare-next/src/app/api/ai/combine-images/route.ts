@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const generatedImage = await generatePollinationsImage(finalPrompt, {
       width: 512,
       height: 512,
-      model: 'flux'
+      model: 'nanobanana'
     });
 
     if (!generatedImage) {
