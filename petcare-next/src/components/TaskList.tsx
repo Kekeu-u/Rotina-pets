@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { usePet } from '@/context/PetContext';
 import { TASKS } from '@/lib/constants';
 
 export default function TaskList() {
   const { state, completeTask, aiConfigured } = usePet();
+  const [reaction, setReaction] = useState<{ emoji: string; message: string } | null>(null);
 
   const toMins = (t: string) => {
     const [h, m] = t.split(':').map(Number);
@@ -16,38 +18,48 @@ export default function TaskList() {
     return d.getHours() * 60 + d.getMinutes();
   };
 
-  const handleTaskClick = async (taskId: string) => {
+  const handleTaskClick = (taskId: string) => {
     const task = TASKS.find(t => t.id === taskId);
     if (!task || state.done.includes(taskId)) return;
 
+    // Complete task immediately (não bloqueia)
     completeTask(taskId);
 
-    // Show AI reaction if configured
+    // Get AI reaction in background (opcional)
     if (aiConfigured && state.pet) {
-      try {
-        const res = await fetch('/api/ai/pet-reaction', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            petName: state.pet.name,
-            petBreed: state.pet.breed,
-            taskName: task.name,
-            happiness: state.happiness,
-          }),
-        });
-        const data = await res.json();
-        if (data.message) {
-          // Show reaction modal - you can implement this
-          alert(`${task.emoji} ${data.message}`);
-        }
-      } catch (error) {
-        console.error('Failed to get pet reaction:', error);
-      }
+      fetch('/api/ai/pet-reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          petName: state.pet.name,
+          petBreed: state.pet.breed,
+          taskName: task.name,
+          happiness: state.happiness,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.message) {
+            setReaction({ emoji: task.emoji, message: data.message });
+            setTimeout(() => setReaction(null), 3000);
+          }
+        })
+        .catch(err => console.error('AI reaction failed:', err));
     }
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative">
+      {/* AI Reaction Toast */}
+      {reaction && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-indigo-900/90 border border-indigo-500 px-4 py-3 rounded-xl shadow-lg animate-pulse max-w-[90%]">
+          <p className="text-sm text-center">
+            <span className="text-xl mr-2">{reaction.emoji}</span>
+            {reaction.message}
+          </p>
+        </div>
+      )}
+
       {TASKS.map((task) => {
         const done = state.done.includes(task.id);
         const c = currMins();
