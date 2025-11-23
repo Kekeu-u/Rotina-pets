@@ -1,10 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AppState, Pet, HistoryItem, Screen } from '@/types';
-import { STORAGE_KEY, TASKS, DEFAULT_PHOTO } from '@/lib/constants';
-
-const PIN_KEY = 'petcare_pin';
+import { User } from '@supabase/supabase-js';
+import { AppState, Pet, Screen } from '@/types';
+import { STORAGE_KEY, TASKS } from '@/lib/constants';
+import { supabase, savePetData, getPetData, signUp, signIn, signOut } from '@/lib/supabase';
 
 interface PetContextType {
   loaded: boolean;
@@ -12,15 +12,15 @@ interface PetContextType {
   screen: Screen;
   aiConfigured: boolean;
   isAuthenticated: boolean;
-  hasPin: boolean;
+  user: User | null;
   setScreen: (screen: Screen) => void;
   setPet: (pet: Pet) => void;
   completeTask: (taskId: string) => void;
   doAction: (action: string, pts: number, emoji: string, name: string) => void;
   updateHappiness: (delta: number) => void;
   saveProductPreview: (productId: string, imageData: string) => void;
-  createPin: (pin: string) => void;
-  verifyPin: (pin: string) => boolean;
+  handleSignUp: (email: string, password: string) => Promise<{ error: any }>;
+  handleSignIn: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => void;
   reset: () => void;
 }
@@ -38,52 +38,102 @@ const defaultState: AppState = {
 
 const PetContext = createContext<PetContextType | undefined>(undefined);
 
-// Simple hash function for PIN (not cryptographically secure, but ok for this use case)
-function hashPin(pin: string): string {
-  let hash = 0;
-  for (let i = 0; i < pin.length; i++) {
-    const char = pin.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
 export function PetProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(defaultState);
   const [screen, setScreen] = useState<Screen>('login');
   const [aiConfigured, setAiConfigured] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasPin, setHasPin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  // Load state from localStorage
+  // Listen to auth state changes
   useEffect(() => {
-    // Check if PIN exists
-    const storedPin = localStorage.getItem(PIN_KEY);
-    setHasPin(!!storedPin);
-
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setState({ ...defaultState, ...parsed });
-
-      // Check if new day
-      const today = new Date().toISOString().split('T')[0];
-      if (parsed.lastDate !== today) {
-        // New day logic
-        const newStreak = parsed.done.length === TASKS.length && parsed.lastDate ? parsed.streak + 1 : parsed.lastDate ? 0 : parsed.streak;
-        setState(prev => ({
-          ...prev,
-          done: [],
-          history: [],
-          streak: newStreak,
-          lastDate: today,
-        }));
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        loadUserData(session.user.id);
+      } else {
+        setLoaded(true);
       }
-    }
-    setLoaded(true);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        await loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setState(defaultState);
+        setScreen('login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // Load user data from Supabase
+  const loadUserData = async (userId: string) => {
+    try {
+      const { data, error } = await getPetData(userId);
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading pet data:', error);
+      }
+
+      if (data) {
+        const today = new Date().toISOString().split('T')[0];
+        let loadedState = { ...defaultState, ...data };
+
+        // Check if new day - reset daily tasks
+        if (loadedState.lastDate !== today) {
+          const newStreak = loadedState.done.length === TASKS.length && loadedState.lastDate
+            ? loadedState.streak + 1
+            : loadedState.lastDate ? 0 : loadedState.streak;
+
+          loadedState = {
+            ...loadedState,
+            done: [],
+            history: [],
+            streak: newStreak,
+            lastDate: today,
+          };
+        }
+
+        setState(loadedState);
+        setScreen(loadedState.pet ? 'dashboard' : 'setup');
+      } else {
+        // New user, no data yet
+        setState(defaultState);
+        setScreen('setup');
+      }
+    } catch (err) {
+      console.error('Failed to load user data:', err);
+      setState(defaultState);
+      setScreen('setup');
+    } finally {
+      setLoaded(true);
+    }
+  };
+
+  // Save state to Supabase when it changes
+  useEffect(() => {
+    if (loaded && isAuthenticated && user) {
+      // Debounce saves to avoid too many requests
+      const timeout = setTimeout(() => {
+        savePetData(user.id, state).catch(err => {
+          console.error('Failed to save pet data:', err);
+        });
+      }, 1000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [state, loaded, isAuthenticated, user]);
 
   // Check AI configuration
   useEffect(() => {
@@ -92,13 +142,6 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       .then(data => setAiConfigured(data.configured))
       .catch(() => setAiConfigured(false));
   }, []);
-
-  // Save state to localStorage
-  useEffect(() => {
-    if (loaded && isAuthenticated) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-  }, [state, loaded, isAuthenticated]);
 
   // Happiness decay
   useEffect(() => {
@@ -114,40 +157,38 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [state.pet, state.happiness, isAuthenticated]);
 
-  const createPin = useCallback((pin: string) => {
-    const hashed = hashPin(pin);
-    localStorage.setItem(PIN_KEY, hashed);
-    setHasPin(true);
-    setIsAuthenticated(true);
+  const handleSignUp = useCallback(async (email: string, password: string) => {
+    const { data, error } = await signUp(email, password);
 
-    // If no pet, go to setup, else dashboard
-    if (state.pet) {
-      setScreen('dashboard');
-    } else {
-      setScreen('setup');
-    }
-  }, [state.pet]);
-
-  const verifyPin = useCallback((pin: string): boolean => {
-    const storedHash = localStorage.getItem(PIN_KEY);
-    const inputHash = hashPin(pin);
-
-    if (storedHash === inputHash) {
-      setIsAuthenticated(true);
-
-      // Navigate to appropriate screen
-      if (state.pet) {
-        setScreen('dashboard');
-      } else {
+    if (!error && data.user) {
+      // Auto-login after signup if email confirmation is disabled
+      if (data.session) {
+        setUser(data.user);
+        setIsAuthenticated(true);
         setScreen('setup');
       }
-      return true;
     }
-    return false;
-  }, [state.pet]);
 
-  const logout = useCallback(() => {
+    return { error };
+  }, []);
+
+  const handleSignIn = useCallback(async (email: string, password: string) => {
+    const { data, error } = await signIn(email, password);
+
+    if (!error && data.user) {
+      setUser(data.user);
+      setIsAuthenticated(true);
+      await loadUserData(data.user.id);
+    }
+
+    return { error };
+  }, []);
+
+  const logout = useCallback(async () => {
+    await signOut();
+    setUser(null);
     setIsAuthenticated(false);
+    setState(defaultState);
     setScreen('login');
   }, []);
 
@@ -205,14 +246,13 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const reset = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(PIN_KEY);
+  const reset = useCallback(async () => {
+    if (user) {
+      await savePetData(user.id, defaultState);
+    }
     setState(defaultState);
-    setIsAuthenticated(false);
-    setHasPin(false);
-    setScreen('login');
-  }, []);
+    setScreen('setup');
+  }, [user]);
 
   return (
     <PetContext.Provider value={{
@@ -221,15 +261,15 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       screen,
       aiConfigured,
       isAuthenticated,
-      hasPin,
+      user,
       setScreen,
       setPet,
       completeTask,
       doAction,
       updateHappiness,
       saveProductPreview,
-      createPin,
-      verifyPin,
+      handleSignUp,
+      handleSignIn,
       logout,
       reset,
     }}>
