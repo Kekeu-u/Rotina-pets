@@ -374,6 +374,18 @@ function initEvents() {
     });
 }
 
+// Splash Screen
+function hideSplash() {
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+
+    splash.classList.add('hide');
+    app.style.display = 'block';
+
+    // Remove splash after animation
+    setTimeout(() => splash.remove(), 500);
+}
+
 // Init
 function init() {
     load();
@@ -381,7 +393,11 @@ function init() {
     initEvents();
     if (window.AI) AI.load();
 
-    handleAuth();
+    // Show splash for 2 seconds, then show app
+    setTimeout(() => {
+        hideSplash();
+        handleAuth();
+    }, 2000);
 
     console.log('PetCare v3 🐕');
 }
