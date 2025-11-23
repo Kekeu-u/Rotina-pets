@@ -429,6 +429,7 @@ function openAvatarMenu() {
 // Handle avatar photo upload
 function handleAvatarUpload() {
     const input = $('#avatar-photo-input');
+    input.value = ''; // Reset para permitir mesmo arquivo
     input.click();
 }
 
@@ -436,36 +437,38 @@ function handleAvatarUpload() {
 async function processAvatarUpload(file) {
     if (!file) return;
 
-    // Close avatar menu
-    $('#avatar-menu-modal').style.display = 'none';
+    console.log('📸 Iniciando processamento da foto...');
 
-    // Show processing modal
-    const modal = $('#photo-processing-modal');
-    const preview = $('#processing-photo');
-    const overlay = $('#processing-overlay');
-    const check = $('#processing-check');
-    const title = $('#processing-title');
-    const status = $('#processing-status');
-    const stepOptimize = $('#step-optimize');
-    const stepAnalyze = $('#step-analyze');
-    const stepSave = $('#step-save');
+    try {
+        // Close avatar menu
+        $('#avatar-menu-modal').style.display = 'none';
 
-    // Reset state
-    overlay.style.display = 'flex';
-    check.style.display = 'none';
-    title.textContent = 'Processando foto...';
-    [stepOptimize, stepAnalyze, stepSave].forEach(s => {
-        s.classList.remove('active', 'done');
-    });
+        // Show processing modal
+        const modal = $('#photo-processing-modal');
+        const preview = $('#processing-photo');
+        const overlay = $('#processing-overlay');
+        const check = $('#processing-check');
+        const title = $('#processing-title');
+        const status = $('#processing-status');
+        const stepOptimize = $('#step-optimize');
+        const stepAnalyze = $('#step-analyze');
+        const stepSave = $('#step-save');
 
-    modal.style.display = 'flex';
-    initLucideIcons();
+        // Reset state
+        overlay.style.display = 'flex';
+        check.style.display = 'none';
+        title.textContent = 'Processando foto...';
+        [stepOptimize, stepAnalyze, stepSave].forEach(s => {
+            s.classList.remove('active', 'done');
+        });
 
-    // Read file and show preview
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const originalData = e.target.result;
+        modal.style.display = 'flex';
+        initLucideIcons();
+
+        // Read file as data URL
+        const originalData = await readFileAsDataURL(file);
         preview.src = originalData;
+        console.log('📸 Foto carregada, otimizando...');
 
         // Step 1: Optimize
         stepOptimize.classList.add('active');
@@ -475,6 +478,7 @@ async function processAvatarUpload(file) {
         const optimizedData = await optimizeImage(originalData);
         stepOptimize.classList.remove('active');
         stepOptimize.classList.add('done');
+        console.log('📸 Foto otimizada');
 
         // Step 2: Analyze (AI if available)
         stepAnalyze.classList.add('active');
@@ -485,8 +489,9 @@ async function processAvatarUpload(file) {
         if (window.AI?.isConfigured()) {
             try {
                 aiAnalysis = await analyzePhotoWithAI();
+                console.log('📸 Análise IA:', aiAnalysis);
             } catch (err) {
-                console.log('AI analysis skipped');
+                console.log('📸 AI analysis skipped');
             }
         }
         stepAnalyze.classList.remove('active');
@@ -499,6 +504,7 @@ async function processAvatarUpload(file) {
 
         state.pet.photo = optimizedData;
         save();
+        console.log('📸 Foto salva!');
 
         stepSave.classList.remove('active');
         stepSave.classList.add('done');
@@ -517,8 +523,23 @@ async function processAvatarUpload(file) {
         // Update all displays
         updateAvatarDisplay();
         updateShop();
-    };
-    reader.readAsDataURL(file);
+
+        console.log('📸 Processamento concluído!');
+    } catch (error) {
+        console.error('📸 Erro no processamento:', error);
+        alert('Erro ao processar foto. Tente novamente.');
+        $('#photo-processing-modal').style.display = 'none';
+    }
+}
+
+// Read file as Data URL (Promise-based)
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 // Optimize/compress image
