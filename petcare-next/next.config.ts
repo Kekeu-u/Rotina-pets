@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     // Força revalidação do cache de dados
     staleTimes: {
       dynamic: 0,
-      static: 0,
+      static: 30, // Minimum value required by Next.js
     },
   },
 
