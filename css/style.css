@@ -325,22 +325,130 @@ body {
     color: var(--muted);
 }
 
-.avatar-option.ai {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
-    border-color: rgba(99, 102, 241, 0.3);
+/* AI Prompt Section */
+.ai-prompt-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }
 
-.avatar-option.ai i {
+.ai-prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+.ai-prompt-header span:first-child {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #a78bfa;
+    font-weight: 500;
+}
+
+.ai-prompt-header i {
+    width: 16px;
+    height: 16px;
+}
+
+.ai-requests-left {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
     color: #a78bfa;
 }
 
-.avatar-option.ai:hover {
-    border-color: #8b5cf6;
+.ai-requests-left.low {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
-.avatar-thought-container {
-    margin-top: 16px;
+.ai-prompt-input-wrap {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ai-prompt-input {
+    flex: 1;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.ai-prompt-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.ai-prompt-input::placeholder {
+    color: var(--muted);
+}
+
+.ai-prompt-send {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.ai-prompt-send:hover {
+    transform: scale(1.05);
+}
+
+.ai-prompt-send:active {
+    transform: scale(0.95);
+}
+
+.ai-prompt-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ai-prompt-send i {
+    width: 18px;
+    height: 18px;
+}
+
+.ai-response-container {
     animation: fadeIn 0.3s ease;
+    margin-bottom: 8px;
+}
+
+.ai-response-bubble {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 16px;
+    padding: 14px 16px;
+}
+
+.ai-response-bubble p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.ai-prompt-hint {
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+
+.ai-prompt-hint.exhausted {
+    color: #f87171;
 }
 
 @keyframes fadeIn {

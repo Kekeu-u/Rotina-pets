@@ -398,7 +398,8 @@ function openAvatarMenu() {
     const icon = $('#avatar-menu-icon');
     const nameEl = $('#avatar-menu-name');
     const removeBtn = $('#avatar-remove-btn');
-    const thoughtContainer = $('#avatar-thought-container');
+    const responseContainer = $('#ai-response-container');
+    const promptInput = $('#ai-prompt-input');
 
     // Update name
     nameEl.textContent = state.pet.name;
@@ -416,8 +417,12 @@ function openAvatarMenu() {
         removeBtn.style.display = 'none';
     }
 
-    // Hide thought container initially
-    thoughtContainer.style.display = 'none';
+    // Reset AI prompt section
+    if (responseContainer) responseContainer.style.display = 'none';
+    if (promptInput) promptInput.value = '';
+
+    // Update AI requests UI
+    updateAIRequestsUI();
 
     // Show modal
     modal.style.display = 'flex';
@@ -603,33 +608,112 @@ function removeAvatarPhoto() {
     openAvatarMenu(); // Refresh modal
 }
 
-// AI thought in avatar menu
-async function loadAvatarThought() {
-    const container = $('#avatar-thought-container');
-    const text = $('#avatar-thought-text');
+// AI Prompt System
+const AI_REQUESTS_KEY = 'petcare_ai_requests';
+const MAX_AI_REQUESTS = 5;
 
-    container.style.display = 'block';
-    text.textContent = 'Pensando...';
+function getAIRequestsToday() {
+    const data = localStorage.getItem(AI_REQUESTS_KEY);
+    if (!data) return { date: today(), count: 0 };
 
-    if (!window.AI?.isConfigured()) {
-        text.textContent = `${state.pet.name} está feliz em te ver! 🐕`;
+    const parsed = JSON.parse(data);
+    // Reset if new day
+    if (parsed.date !== today()) {
+        return { date: today(), count: 0 };
+    }
+    return parsed;
+}
+
+function saveAIRequest() {
+    const current = getAIRequestsToday();
+    current.count++;
+    current.date = today();
+    localStorage.setItem(AI_REQUESTS_KEY, JSON.stringify(current));
+    updateAIRequestsUI();
+}
+
+function getRemainingRequests() {
+    const { count } = getAIRequestsToday();
+    return Math.max(0, MAX_AI_REQUESTS - count);
+}
+
+function updateAIRequestsUI() {
+    const remaining = getRemainingRequests();
+    const requestsLeft = $('#ai-requests-left');
+    const requestsCount = $('#requests-count');
+    const hint = $('#ai-prompt-hint');
+    const sendBtn = $('#ai-prompt-send');
+    const input = $('#ai-prompt-input');
+
+    if (requestsLeft) {
+        requestsLeft.textContent = `${remaining}/${MAX_AI_REQUESTS}`;
+        requestsLeft.classList.toggle('low', remaining <= 1);
+    }
+    if (requestsCount) requestsCount.textContent = remaining;
+
+    if (remaining === 0) {
+        if (hint) {
+            hint.textContent = 'Limite de pedidos atingido hoje';
+            hint.classList.add('exhausted');
+        }
+        if (sendBtn) sendBtn.disabled = true;
+        if (input) input.disabled = true;
+    } else {
+        if (hint) {
+            hint.innerHTML = `Restam <span id="requests-count">${remaining}</span> pedidos hoje`;
+            hint.classList.remove('exhausted');
+        }
+        if (sendBtn) sendBtn.disabled = false;
+        if (input) input.disabled = false;
+    }
+}
+
+async function sendAIPrompt() {
+    const input = $('#ai-prompt-input');
+    const responseContainer = $('#ai-response-container');
+    const responseText = $('#ai-response-text');
+    const sendBtn = $('#ai-prompt-send');
+
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    const remaining = getRemainingRequests();
+    if (remaining <= 0) {
+        alert('Você atingiu o limite de 5 pedidos hoje. Volte amanhã!');
         return;
     }
 
+    if (!window.AI?.isConfigured()) {
+        responseContainer.style.display = 'block';
+        responseText.textContent = 'Configure sua API Key nas configurações para usar a IA.';
+        return;
+    }
+
+    // Show loading state
+    sendBtn.disabled = true;
+    responseContainer.style.display = 'block';
+    responseText.textContent = 'Pensando...';
+
     try {
-        const hour = new Date().getHours();
-        const pending = TASKS.length - state.done.length;
-        const thought = await AI.getPetThought(
-            state.pet.name,
-            state.pet.breed,
-            state.happiness,
-            hour,
-            pending,
-            state.done.length
-        );
-        text.textContent = thought || `${state.pet.name} te ama!`;
-    } catch {
-        text.textContent = `${state.pet.name} está feliz! 🐕`;
+        const fullPrompt = `Você é um assistente especializado em pets. O usuário tem um ${state.pet.breed || 'cachorro'} chamado ${state.pet.name}.
+Responda de forma carinhosa e útil em no máximo 50 palavras.
+
+Pergunta do usuário: ${prompt}`;
+
+        const response = await AI.request(fullPrompt);
+        responseText.textContent = response || 'Desculpe, não consegui processar. Tente novamente.';
+
+        // Save request count
+        saveAIRequest();
+
+        // Clear input
+        input.value = '';
+
+    } catch (error) {
+        console.error('AI Error:', error);
+        responseText.textContent = 'Erro ao processar. Verifique sua API Key.';
+    } finally {
+        sendBtn.disabled = getRemainingRequests() <= 0;
     }
 }
 
@@ -663,7 +747,12 @@ function initEvents() {
     // Avatar menu buttons
     $('#avatar-upload-btn').onclick = () => handleAvatarUpload();
     $('#avatar-remove-btn').onclick = () => removeAvatarPhoto();
-    $('#avatar-ai-btn').onclick = () => loadAvatarThought();
+
+    // AI Prompt handlers
+    $('#ai-prompt-send').onclick = () => sendAIPrompt();
+    $('#ai-prompt-input').onkeypress = e => {
+        if (e.key === 'Enter') sendAIPrompt();
+    };
 
     // Avatar photo input
     $('#avatar-photo-input').onchange = e => {

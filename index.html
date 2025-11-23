@@ -235,16 +235,26 @@
                         <i data-lucide="trash-2"></i>
                         <span>Remover Foto</span>
                     </button>
-                    <button class="avatar-option ai" id="avatar-ai-btn">
-                        <i data-lucide="sparkles"></i>
-                        <span>Pensamento IA</span>
-                    </button>
                 </div>
 
-                <div class="avatar-thought-container" id="avatar-thought-container" style="display: none;">
-                    <div class="thought-bubble-big">
-                        <p id="avatar-thought-text">💭</p>
+                <!-- AI Prompt Section -->
+                <div class="ai-prompt-section">
+                    <div class="ai-prompt-header">
+                        <span><i data-lucide="sparkles"></i> Pergunte à IA</span>
+                        <span class="ai-requests-left" id="ai-requests-left">5/5</span>
                     </div>
+                    <div class="ai-prompt-input-wrap">
+                        <input type="text" id="ai-prompt-input" class="ai-prompt-input" placeholder="Ex: Dicas de cuidado, brincadeiras..." maxlength="200">
+                        <button class="ai-prompt-send" id="ai-prompt-send">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+                    <div class="ai-response-container" id="ai-response-container" style="display: none;">
+                        <div class="ai-response-bubble">
+                            <p id="ai-response-text">...</p>
+                        </div>
+                    </div>
+                    <small class="ai-prompt-hint" id="ai-prompt-hint">Restam <span id="requests-count">5</span> pedidos hoje</small>
                 </div>
 
                 <small class="thought-hint">Toque fora para fechar</small>
