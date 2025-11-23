@@ -65,11 +65,9 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <div class="avatar-container">
+                    <div class="avatar-container" id="avatar-click">
                         <img id="pet-avatar" class="avatar" src="" alt="">
-                        <div class="thought-bubble" id="pet-thought">
-                            <span id="thought-text">💭</span>
-                        </div>
+                        <div class="avatar-ai-badge" id="ai-badge">✨</div>
                     </div>
                     <div>
                         <h1 id="pet-name-display">Pet</h1>
@@ -243,6 +241,17 @@
                 <h2>Parabéns!</h2>
                 <p id="celebration-msg">Todas as tasks!</p>
                 <button class="btn" id="close-celebration">Continuar</button>
+            </div>
+        </div>
+
+        <!-- Pet Thought Modal -->
+        <div id="thought-modal" class="modal" style="display: none;">
+            <div class="modal-box thought">
+                <img id="thought-pet-photo" class="thought-photo" src="" alt="">
+                <div class="thought-bubble-big">
+                    <p id="thought-text">💭</p>
+                </div>
+                <small class="thought-hint">Toque fora para fechar</small>
             </div>
         </div>
 

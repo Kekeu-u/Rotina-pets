@@ -298,24 +298,26 @@ async function showReaction(taskName, emoji) {
     }
 }
 
-// Pet Thought Bubble
-let lastThoughtTime = 0;
-async function loadPetThought() {
-    const bubble = $('#pet-thought');
+// Pet Thought Modal
+async function openThoughtModal() {
+    if (!state.pet) return;
+
+    const modal = $('#thought-modal');
+    const photo = $('#thought-pet-photo');
     const text = $('#thought-text');
 
-    if (!window.AI?.isConfigured() || !state.pet) {
-        bubble.style.display = 'none';
+    // Set photo
+    photo.src = state.pet.photo || DEFAULT_PHOTO;
+
+    // Show modal with loading state
+    modal.style.display = 'flex';
+    text.textContent = 'Pensando...';
+
+    // If AI not configured, show fallback
+    if (!window.AI?.isConfigured()) {
+        text.textContent = `${state.pet.name} está feliz em te ver! 🐕`;
         return;
     }
-
-    // Only refresh every 5 minutes
-    const now = Date.now();
-    if (now - lastThoughtTime < 300000 && lastThoughtTime > 0) return;
-
-    bubble.style.display = 'block';
-    bubble.classList.add('loading');
-    text.textContent = '💭';
 
     try {
         const hour = new Date().getHours();
@@ -328,25 +330,24 @@ async function loadPetThought() {
             pending,
             state.done.length
         );
-        text.textContent = thought || '💭';
-        lastThoughtTime = now;
+        text.textContent = thought || `${state.pet.name} te ama!`;
     } catch {
-        text.textContent = '💭';
+        text.textContent = `${state.pet.name} está feliz! 🐕`;
     }
-
-    bubble.classList.remove('loading');
 }
 
-// Click on thought to refresh
-document.addEventListener('DOMContentLoaded', () => {
-    const bubble = document.getElementById('pet-thought');
-    if (bubble) {
-        bubble.onclick = () => {
-            lastThoughtTime = 0;
-            loadPetThought();
-        };
+// Update AI badge visibility
+function updateAIBadge() {
+    const badge = $('#ai-badge');
+    if (badge) {
+        badge.classList.toggle('hidden', !window.AI?.isConfigured());
     }
-});
+}
+
+// Simplified - no auto-load needed
+function loadPetThought() {
+    updateAIBadge();
+}
 
 // Decay
 setInterval(() => {
@@ -363,6 +364,9 @@ function initEvents() {
     $('#start-btn').onclick = () => {
         show('setup');
     };
+
+    // Avatar click to open thought modal
+    $('#avatar-click').onclick = () => openThoughtModal();
 
     // Tabs
     $$('.tab').forEach(tab => {
