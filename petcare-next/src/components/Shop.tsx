@@ -93,8 +93,8 @@ export default function Shop() {
   return (
     <div className="space-y-4">
       {/* Shop Header */}
-      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-xl border border-indigo-700/30">
-        <div className="w-16 h-16 rounded-full bg-gray-800 border-2 border-indigo-500 overflow-hidden flex items-center justify-center relative">
+      <div className="flex items-center gap-4 p-4 glass-card border-indigo-500/30">
+        <div className="w-16 h-16 rounded-full glass border-2 border-indigo-500/50 overflow-hidden flex items-center justify-center relative">
           {hasPhoto ? (
             <img src={state.pet?.photo || ''} alt={state.pet?.name} className="w-full h-full object-cover" />
           ) : (
@@ -132,9 +132,9 @@ export default function Shop() {
                 href={product.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-indigo-500 transition-all relative"
+                className="flex items-center gap-3 p-3 glass-card hover:border-indigo-500/50 transition-all relative"
               >
-                <div className="w-16 h-16 rounded-lg bg-white overflow-hidden flex-shrink-0 relative">
+                <div className="w-16 h-16 rounded-lg bg-white/90 overflow-hidden flex-shrink-0 relative">
                   <img
                     src={hasPreview ? previewImg : product.image}
                     alt={product.name}
@@ -151,7 +151,7 @@ export default function Shop() {
                   <p className="text-xs text-gray-400">{product.description}</p>
                   <span className="text-green-400 font-semibold">{product.price}</span>
                 </div>
-                <div className="absolute top-2 right-2 text-xs px-2 py-0.5 bg-purple-500/30 rounded">
+                <div className="absolute top-2 right-2 text-xs px-2 py-0.5 glass rounded border-purple-500/30">
                   {product.badge}
                 </div>
               </a>
@@ -160,7 +160,7 @@ export default function Shop() {
                 <button
                   onClick={() => handleGenerateImage(product.id, product.name, product.description)}
                   disabled={isGenerating || autoGenerating}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-purple-700/30 rounded-lg text-purple-300 text-sm hover:border-purple-500 transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 glass-button rounded-lg text-purple-300 text-sm hover:border-purple-500/50 transition-all disabled:opacity-50"
                 >
                   {isGenerating ? (
                     <>
@@ -186,8 +186,8 @@ export default function Shop() {
 
       {/* Generated Image Modal */}
       {generatedImage && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setGeneratedImage(null)}>
-          <div className="bg-gray-900 rounded-2xl p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setGeneratedImage(null)}>
+          <div className="glass-card p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="relative rounded-xl overflow-hidden mb-4">
               <img src={generatedImage.image} alt={generatedImage.productName} className="w-full" />
             </div>
@@ -196,7 +196,7 @@ export default function Shop() {
             <div className="flex gap-2">
               <button
                 onClick={() => setGeneratedImage(null)}
-                className="flex-1 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                className="flex-1 py-2 glass-button rounded-lg hover:bg-white/10 transition-colors"
               >
                 Fechar
               </button>

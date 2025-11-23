@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { usePet } from '@/context/PetContext';
 import { HAPPINESS_LEVELS, TASKS } from '@/lib/constants';
-import { Dog, Settings } from 'lucide-react';
 import Header from './Header';
 import TaskList from './TaskList';
 import Actions from './Actions';
@@ -30,7 +29,7 @@ export default function Dashboard() {
       />
 
       {/* Stats */}
-      <div className="flex justify-around px-4 py-3 bg-gray-900/50 border-b border-gray-800">
+      <div className="flex justify-around px-4 py-3 glass border-b border-white/10">
         <div className="text-center">
           <span className="text-2xl">{happinessLevel?.emoji || '😊'}</span>
           <span className="ml-1 text-lg font-bold">{Math.round(state.happiness)}</span>
@@ -50,15 +49,15 @@ export default function Dashboard() {
       </div>
 
       {/* Tabs */}
-      <nav className="flex border-b border-gray-800">
+      <nav className="flex glass border-b border-white/10">
         {(['rotina', 'acoes', 'loja', 'historico'] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium transition-all ${
               activeTab === tab
-                ? 'text-indigo-400 border-b-2 border-indigo-500'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/10'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
             }`}
           >
             {tab === 'loja' ? '🛒 Loja' : tab === 'acoes' ? 'Ações' : tab === 'historico' ? 'Histórico' : tab.charAt(0).toUpperCase() + tab.slice(1)}

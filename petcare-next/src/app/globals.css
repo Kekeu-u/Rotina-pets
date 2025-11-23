@@ -1,8 +1,55 @@
 @import "tailwindcss";
 
+/* Theme variables */
 :root {
   --background: #0a0a12;
+  --background-secondary: #1a1a2e;
   --foreground: #ffffff;
+  --foreground-secondary: #9ca3af;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.light {
+  --background: #f0f4f8;
+  --background-secondary: #ffffff;
+  --foreground: #1a1a2e;
+  --foreground-secondary: #6b7280;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Glassmorphism base class */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 1rem;
+}
+
+.glass-button {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
+}
+
+.glass-button:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 /* Custom animations */
@@ -17,6 +64,11 @@
   }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes bounce {
   0%, 100% {
     transform: translateY(0);
@@ -28,6 +80,10 @@
 
 .animate-fadeInUp {
   animation: fadeInUp 0.8s ease;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease;
 }
 
 /* Scrollbar styling */
@@ -54,9 +110,39 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   background: var(--background);
   color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Border width for spinner */
 .border-3 {
   border-width: 3px;
+}
+
+/* Light mode specific overrides */
+.light .text-white {
+  color: var(--foreground);
+}
+
+.light .text-gray-400 {
+  color: var(--foreground-secondary);
+}
+
+.light .bg-gray-800\/50,
+.light .bg-gray-800 {
+  background: var(--glass-bg);
+}
+
+.light .border-gray-700,
+.light .border-gray-800 {
+  border-color: var(--glass-border);
+}
+
+.light .bg-gray-900\/50,
+.light .bg-gray-900 {
+  background: var(--background-secondary);
+}
+
+/* Gradient backgrounds for light mode */
+.light .bg-gradient-to-br.from-\[\#0a0a12\] {
+  background: linear-gradient(to bottom right, #e0e7ff, #f0f4f8, #e0e7ff);
 }
