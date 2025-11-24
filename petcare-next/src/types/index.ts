@@ -37,6 +37,25 @@ export interface Product {
   link: string;
 }
 
+// Produto customizado adicionado pelo usuário via link do Mercado Livre
+export interface CustomProduct {
+  id: string;
+  url: string;
+  title: string;
+  description: string;
+  image: string;
+  price?: string;
+  addedAt: string;
+}
+
+// Cache de imagens pré-carregadas dos produtos
+export interface CachedProductImage {
+  productId: string;
+  imageUrl: string;
+  cachedAt: string;
+  petPhotoHash?: string; // Para invalidar cache se foto do pet mudar
+}
+
 export interface AppState {
   pet: Pet | null;
   happiness: number;
@@ -47,6 +66,9 @@ export interface AppState {
   lastDate: string | null;
   productPreviews: Record<string, string>;
   taskNotes: Record<string, TaskNote>;
+  customProducts: CustomProduct[];
+  cachedProductImages: Record<string, CachedProductImage>;
+  isPreloadingImages: boolean;
 }
 
 export type Screen = 'login' | 'setup' | 'dashboard';
