@@ -52,7 +52,7 @@
 ```
 - Groq LLM API (Llama 3.3 70B, Llama 3.1 8B, Mixtral)
 - Google Gemini API (texto + visao)
-- Pollinations.ai (imagens gratuitas - Flux, Turbo)
+- Pollinations.ai (imagens gratuitas - Nano Banana, Flux, Turbo)
 ```
 
 ---
@@ -242,7 +242,7 @@ const ACTIONS = [
 - Toast notifications
 
 #### Geracao de Imagens
-- Pet + Produto (Pollinations Flux)
+- Pet + Produto (Pollinations Nano Banana)
 - Analise de fotos (Gemini Vision)
 - Cache de previews
 
